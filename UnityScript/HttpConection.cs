@@ -8,11 +8,11 @@ namespace Symnity.UnityScript
 {
     public class HttpConection
     {
-        public static async UniTask<string> Announce(string payload)
+        public static async UniTask<string> Announce(string nodeUrl, string payload)
         {
             try
             { 
-                const string url = SymbolConst.Node + "/transactions";
+                var url = nodeUrl + "/transactions";
                 var myData = Encoding.UTF8.GetBytes("{ \"payload\" : \"" + payload + "\"}");
                 var webRequest = UnityWebRequest.Put(url, myData);
                 webRequest.SetRequestHeader("Content-Type", "application/json");

@@ -132,7 +132,7 @@ namespace Symnity.UnityScript
                     playerMasterAccount.Address
                 },
                 new List<UnresolvedAddress>(),
-                SymbolConst.Mode
+                _networkType
             );
 
             var playerChildAccountMetadataLifeTransactionL = AccountMetadataTransaction.Create(
@@ -141,7 +141,7 @@ namespace Symnity.UnityScript
                 keyLife,
                 (short) metaDataLife.Length,
                 metaDataLife,
-                SymbolConst.Mode
+                _networkType
             );
 
             var playerChildAccountMetadataPowerTransactionL = AccountMetadataTransaction.Create(
@@ -150,7 +150,7 @@ namespace Symnity.UnityScript
                 keyAttack,
                 (short) metaDataPower.Length,
                 metaDataPower,
-                SymbolConst.Mode
+                _networkType
             );
             
 
@@ -164,27 +164,27 @@ namespace Symnity.UnityScript
                     Transaction.ToAggregate(playerChildAccountMetadataPowerTransactionL,
                         adminAccount.GetPublicAccount()),
                 },
-                SymbolConst.Mode,
+                _networkType,
                 new List<AggregateTransactionCosignature>(),
                 100000);
             
             var signedTransactionNotComplete = adminAccount.Sign(
                 aggregateTransaction,
-                SymbolConst.GenerationHash
+                GenerationHash
             );
 
             var cosignedTransactionCharacter =
                 CosignatureTransaction.SignTransactionPayload(
                     characterAccount,
                     signedTransactionNotComplete.Payload,
-                    SymbolConst.GenerationHash
+                    GenerationHash
                 );
 
             var cosignedTransactionGame =
                 CosignatureTransaction.SignTransactionPayload(
                     playerMasterAccount,
                     signedTransactionNotComplete.Payload,
-                    SymbolConst.GenerationHash
+                    GenerationHash
                 );
 
             var cosignatureSignedTransactions = new[]
@@ -205,7 +205,7 @@ namespace Symnity.UnityScript
                 adminAccount.SignTransactionGivenSignatures(
                     aggregateTransaction,
                     cosignatureSignedTransactions,
-                    SymbolConst.GenerationHash
+                    GenerationHash
                 );
             return signedTransactionComplete;
         }
