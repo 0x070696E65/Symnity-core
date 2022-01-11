@@ -1,6 +1,7 @@
 # Symnity
-SymnityはUnityでブロックチェーンであるSymbolを利用するためのアセットです。全てC#でコーディングしているのでUnity以外でも利用は可能です。
-
+SymnityはUnityでブロックチェーンであるSymbolを利用するためのアセットです。
+全てC#でコーディングしているのでUnity以外でも利用は可能です。
+将来的に誰でも簡単にSymbolを使うことができるようにPrefabをいくつか作成する予定です。そのためUnity用アセットと呼びます。<br>
 ※TypescriptやJavaのSDKを参考に作成していますが、まだ完成していません。（2022年1月11日）
 ひとまず最低限の機能はありますので利用はできるかと思います。
 
@@ -8,9 +9,12 @@ SymnityはUnityでブロックチェーンであるSymbolを利用するため�
 * UniTask 2.2.5
 
 # Installation
+ファイルをダウンロードしてUnityのAsset内にインポートしてください。
 
-Unityで使用する際にトランザクションをアナウンスするためにUniTaskを使用していますので以下のリンクからunitypackageをインストールしてください。
-<br>https://github.com/Cysharp/UniTask/releases
+また、トランザクションをアナウンスするためにUniTaskを使用していますので以下のリンクからunitypackageをインストールしてください。
+<br>
+https://github.com/Cysharp/UniTask/releases<br>
+Unityで利用しない場合は必要ありません。
 
 # Usage
 
@@ -18,9 +22,10 @@ Unityで使用する際にトランザクションをアナウンスするため
 例）
 
 ```c#
+var networkType = NetworkType.TEST_NET;
 var deadLine = Deadline.Create(EpochAdjustment);
-var senderAccount = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
-var receiverAccount = Account.CreateFromPrivateKey(PrivateKey2, _networkType);
+var senderAccount = Account.CreateFromPrivateKey(PrivateKey1, networkType);
+var receiverAccount = Account.CreateFromPrivateKey(PrivateKey2, networkType);
 var message = PlainMessage.Create("Hello Symbol from NEM!");
 var mosaicId = new MosaicId("3A8416DB2D53B6C8");
 var mosaic = new Mosaic(mosaicId, 1000000);
@@ -29,7 +34,7 @@ var transferTransaction = TransferTransaction.Create(
     receiverAccount.Address,
     new List<Mosaic> {mosaic},
     message,
-    _networkType,
+    networkType,
     100000
 );
 var signedTx = senderAccount.Sign(transferTransaction, GenerationHash);
@@ -38,7 +43,7 @@ Debug.Log(signedTx.Hash);
 
 HttpConection.Announce(Node, signedTx.Payload).Forget();
 ```
-* （メッセージ付）送金
+* （メッセージ付）送金トランザクション
 * メタデータ割当・更新トランザクション
 * マルチシグトランザクション
 * リボーカブルモザイク没収トランザクション
@@ -90,7 +95,7 @@ multisigData.multisigAddresses.ForEach(multisigAddress =>
 });
 ```
 
-WebSocketでの接続も可能でした。私はこちらを利用しています。<br>
+WebSocketでの接続も可能でした。私はこちらを利用しています。(WebGL対応のため）<br>
 https://github.com/endel/NativeWebSocket
 
 Symbolに関してはこちらを参考にしてください。<br>
@@ -103,7 +108,7 @@ https://qiita.com/nem_takanobu/items/4f50e5740318d92d7dcb
 
 # Note
 
-現在は自分で使うために作成していますのでバグやエラー処理などは完璧ではありません。ある程度ご理解いただいた上でご利用ください。
+現在は自分で使うために作成していますのでバグやエラー処理などは完璧ではありません。ご理解いただいた上でご利用ください。
 希望するトランザクションなどあればTwitterなどでリクエストしていただいても構いません。可能な限り対応します。
 
 アセット内で暗号化等のために<a href="https://www.bouncycastle.org/">BouncyCastle</a>を使用しています。ただWebGLでビルドしたときにDLLだとうまくいかなかったので、ファイルをそのまま使用しています。そのためかいくつかWarningが出ますがご理解いただける方のみご利用ください。いつかなんとかしたいとは思っています。
