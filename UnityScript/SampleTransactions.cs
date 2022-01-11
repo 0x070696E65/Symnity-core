@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using Symnity.Core.Format;
 using Symnity.Model.Accounts;
 using Symnity.Model.BlockChain;
@@ -30,16 +27,15 @@ namespace Symnity.UnityScript
         private const string PrivateKey3 = "";
 
         // シンプルなメッセージ送信トランザクション
-        public static SignedTransaction TransferTransaction()
+        public static SignedTransaction SimpleTransferTransaction()
         {
-            Debug.Log("TransferTransaction start");
             var deadLine = Deadline.Create(EpochAdjustment);
             var senderAccount = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
             var receiverAccount = Account.CreateFromPrivateKey(PrivateKey2, _networkType);
             var message = PlainMessage.Create("Hello Symbol from NEM!");
             var mosaicId = new MosaicId("3A8416DB2D53B6C8");
             var mosaic = new Mosaic(mosaicId, 1000000);
-            var transferTransaction = Model.Transactions.TransferTransaction.Create(
+            var transferTransaction = TransferTransaction.Create(
                 deadLine,
                 receiverAccount.Address,
                 new List<Mosaic> {mosaic},
