@@ -44,7 +44,7 @@ namespace Symnity.UnityScript
                 receiverAccount.Address,
                 new List<Mosaic> {mosaic},
                 message,
-                NetworkType.TEST_NET,
+                _networkType,
                 100000
             );
             var signedTx = senderAccount.Sign(transferTransaction, GenerationHash);
