@@ -25,9 +25,9 @@ namespace Symnity.UnityScript
         private const string Node = "https://test.hideyoshi-node.net:3001";
         private const int EpochAdjustment = 1637848847;
         private const string GenerationHash = "7FCCD304802016BEBBCD342A332F91FF1F3BB5E902988B352697BE245F48E836";
-        private const string PrivateKey1 = "C4A87F3B600EBE31D6DBA29FD3E68396F34D362B0C2252825B506006B4BBC45C";
-        private const string PrivateKey2 = "BBD394D0EE4E10650D5BF15D1389580C6A6C044481E52022A98CD288A2EB679D";
-        private const string PrivateKey3 = "E2A2348F784BAA529E12D2E1B7FFFC9FDD76ABD1C3F649CA82231E24A0C84F94";
+        private const string PrivateKey1 = "";
+        private const string PrivateKey2 = "";
+        private const string PrivateKey3 = "";
 
         // シンプルなメッセージ送信トランザクション
         public static SignedTransaction TransferTransaction()
