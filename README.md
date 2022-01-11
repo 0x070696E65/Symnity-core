@@ -10,12 +10,11 @@ SymnityはUnityでブロックチェーンであるSymbolを利用するため�
 # Installation
 
 Unityで使用する際にトランザクションをアナウンスするためにUniTaskを使用していますので以下のリンクからunitypackageをインストールしてください。
-
-https://github.com/Cysharp/UniTask/releases
+<br>https://github.com/Cysharp/UniTask/releases
 
 # Usage
 
-今の所、UnityScript/SampleTransaction.csにかかれているトランザクションは対応しています。
+今の所、UnityScript/SampleTransaction.csにかかれているトランザクションは対応しています。<br>
 例）
 
 ```c#
@@ -51,8 +50,8 @@ SymbolのAPIからデータ取得も以下は可能です。
 * メタデータ
 * マルチシグデータ
 
-src/Http/Model
-以下にあるクラスを利用します。
+src/Http/Model<br>
+以下にあるクラスを利用します。<br>
 （参考）
 
 ```c#
@@ -91,14 +90,14 @@ multisigData.multisigAddresses.ForEach(multisigAddress =>
 });
 ```
 
-WebSocketでの接続も可能でした。私はこちらを利用しています。
+WebSocketでの接続も可能でした。私はこちらを利用しています。<br>
 https://github.com/endel/NativeWebSocket
 
-Symbolに関してはこちらを参考にしてください。
-https://docs.symbolplatform.com/ja/getting-started/
+Symbolに関してはこちらを参考にしてください。<br>
+https://docs.symbolplatform.com/ja/getting-started/ <br>
 ※TypeScriptのSDKを主に参考にしていますので書き方は似ていると思います。
 
-また、ネットワークプロパティなどはこちらをご参考ください。
+また、ネットワークプロパティなどはこちらをご参考ください。<br>
 https://qiita.com/nem_takanobu/items/4f50e5740318d92d7dcb
 
 
