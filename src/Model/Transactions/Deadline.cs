@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Symnity.Model.Transactions
 {
@@ -14,7 +15,7 @@ namespace Symnity.Model.Transactions
         /**
          * Deadline value (without Nemesis epoch adjustment)
          */
-        public uint AdjustedValue;
+        public long AdjustedValue;
         
         /**
          * Create deadline model. Default to 2 chrono hours in advance.
@@ -30,7 +31,7 @@ namespace Symnity.Model.Transactions
             if (deadline <= 0) {
                 throw new Exception("deadline should be greater than 0");
             }
-            return CreateFromAdjustedValue((uint)(deadlineDateTime - unixOriginTime).TotalMilliseconds);
+            return CreateFromAdjustedValue((long)Math.Floor((deadlineDateTime - unixOriginTime).TotalMilliseconds));
         }
         
         /**
@@ -39,7 +40,7 @@ namespace Symnity.Model.Transactions
          *
          * @returns {Deadline}
         */
-        public static Deadline CreateFromAdjustedValue(uint adjustedValue) {
+        public static Deadline CreateFromAdjustedValue(long adjustedValue) {
             return new Deadline(adjustedValue);
         }
         
@@ -56,7 +57,7 @@ namespace Symnity.Model.Transactions
          * Constructor
          * @param adjustedValue Adjusted value. (Local datetime minus nemesis epoch adjustment)
          */
-        private Deadline(uint adjustedValue) {
+        private Deadline(long adjustedValue) {
             AdjustedValue = adjustedValue;
         }
     }
