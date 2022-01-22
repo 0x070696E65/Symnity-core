@@ -280,7 +280,7 @@ namespace Symnity.Model.Transactions
         * @returns {byte[]}
         */
         public TransactionBuilder CreateBuilder;
-
+        
         /*
          * @description Serialize a transaction object
          * @returns {string}
@@ -329,6 +329,20 @@ namespace Symnity.Model.Transactions
         {
             return new SignatureDto(Signature != null ? ConvertUtils.GetBytes(Signature) : new byte[64]);
         }
+        
+        /**
+         * Set transaction maxFee using fee multiplier for **ONLY NONE AGGREGATE TRANSACTIONS**
+         * @param feeMultiplier The fee multiplier
+         * @returns {TransferTransaction}
+         */
+        public virtual Transaction SetMaxFee(int feeMultiplier)
+        {
+            if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
+                throw new Exception("setMaxFee can only be used for none aggregate transactions.");
+            }
+            MaxFee = feeMultiplier * GetSize();
+            return this;
+        }
 
         /**
          * Convert an aggregate transaction to an inner transaction including transaction signer.
@@ -337,7 +351,7 @@ namespace Symnity.Model.Transactions
          * @param signer - Innre transaction signer.
          * @returns InnerTransaction
          */
-        public static T ToAggregate<T>(T self, PublicAccount signer) where T : Transaction
+        public virtual T ToAggregate<T>(T self, PublicAccount signer) where T : Transaction
         {
             self.Signer = signer;
             return self;

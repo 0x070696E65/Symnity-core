@@ -30,6 +30,7 @@ namespace Symnity.Model.Transactions
             if (deadline <= 0) {
                 throw new Exception("deadline should be greater than 0");
             }
+            
             return CreateFromAdjustedValue((long)Math.Floor((deadlineDateTime - unixOriginTime).TotalMilliseconds));
         }
         

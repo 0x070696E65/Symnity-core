@@ -85,8 +85,8 @@ namespace Symnity.UnityScript
                 deadLine,
                 new List<Transaction>
                 {
-                    Transaction.ToAggregate(mosaicDefTx, mosaicCreatorAccount.GetPublicAccount()),
-                    Transaction.ToAggregate(mosaicChangeTx, mosaicCreatorAccount.GetPublicAccount())
+                    mosaicDefTx.ToAggregate(mosaicCreatorAccount.GetPublicAccount()),
+                    mosaicChangeTx.ToAggregate(mosaicCreatorAccount.GetPublicAccount())
                 },
                 _networkType,
                 new List<AggregateTransactionCosignature>(),
@@ -154,11 +154,9 @@ namespace Symnity.UnityScript
                 deadLine,
                 new List<Transaction>
                 {
-                    Transaction.ToAggregate(playerChildAccountModificationTransaction, characterAccount.GetPublicAccount()),
-                    Transaction.ToAggregate(playerChildAccountMetadataLifeTransactionL,
-                        adminAccount.GetPublicAccount()),
-                    Transaction.ToAggregate(playerChildAccountMetadataPowerTransactionL,
-                        adminAccount.GetPublicAccount()),
+                    playerChildAccountModificationTransaction.ToAggregate( characterAccount.GetPublicAccount()),
+                    playerChildAccountMetadataLifeTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
+                    playerChildAccountMetadataPowerTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
                 },
                 _networkType,
                 new List<AggregateTransactionCosignature>(),

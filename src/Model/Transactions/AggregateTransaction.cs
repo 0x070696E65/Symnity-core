@@ -144,7 +144,6 @@ namespace Symnity.Model.Transactions
          */ 
         public override int GetSize()
         {
-            Console.WriteLine("CreateBuilder().GetSize()"+CreateBuilder().GetSize());
             return _payloadSize ?? CreateBuilder().GetSize();
         }
         
