@@ -46,11 +46,8 @@ namespace Symnity.Model.Accounts
          * @return {Account}
          */
         public static Account CreateFromPrivateKey(string privateKey, NetworkType networkType ) {
-            Console.WriteLine(privateKey);
             var keyPair = KeyPair.CreateKeyPairFromPrivateKeyString(privateKey);
-            Console.WriteLine(keyPair.privateKey);
             var address = RawAddress.AddressToString(RawAddress.PublicKeyToAddress(keyPair.publicKey, networkType));
-            Console.WriteLine(address);
             return new Account(Address.CreateFromRawAddress(address), keyPair);
         }
         
