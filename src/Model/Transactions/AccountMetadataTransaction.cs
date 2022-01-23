@@ -5,6 +5,7 @@ using Symbol.Builders;
 using Symnity.Core.Format;
 using Symnity.Model.Accounts;
 using Symnity.Model.Network;
+using UnityEngine;
 
 namespace Symnity.Model.Transactions
 {
@@ -31,9 +32,9 @@ namespace Symnity.Model.Transactions
          */
         public readonly string Value;
 
-        private new string Signature;
-        new PublicAccount Signer;
-        new TransactionInfo TransactionInfo;
+        public new string Signature;
+        public new PublicAccount Signer;
+        public new TransactionInfo TransactionInfo;
 
         /**
         * Create a account meta data transaction object
@@ -153,6 +154,16 @@ namespace Symnity.Model.Transactions
         
         /**
          * @internal
+         *
+         * Converts the optional signer to a KeyDto that can be serialized.
+         */
+        protected override PublicKeyDto GetSignerAsBuilder()
+        {
+            return Signer?.ToBuilder() ?? new PublicKeyDto(new byte[32]);
+        }
+        
+        /**
+         * @internal
          * @returns {EmbeddedTransactionBuilder}
          */
         public override EmbeddedTransactionBuilder ToEmbeddedTransaction() {
@@ -166,6 +177,16 @@ namespace Symnity.Model.Transactions
                 ValueSizeDelta,
                 ConvertUtils.Utf8ToByteArray(Value)
             );
+        }
+        
+        /**
+         * @override Transaction.size()
+         * @description get the byte size of a transaction using the builder
+         * @returns {number}
+         * @memberof TransferTransaction
+         */ 
+        public virtual int GetSize() {
+            return _payloadSize ?? CreateBuilder().GetSize();
         }
         
         /**

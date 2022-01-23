@@ -311,21 +311,21 @@ namespace Symnity.Model.Transactions
 
 
         /**
-     * @internal
-     *
-     * Converts the optional signer to a KeyDto that can be serialized.
-     */
-        protected PublicKeyDto GetSignerAsBuilder()
+         * @internal
+         *
+         * Converts the optional signer to a KeyDto that can be serialized.
+         */
+        protected virtual PublicKeyDto GetSignerAsBuilder()
         {
             return Signer != null ? Signer.ToBuilder() : new PublicKeyDto(new byte[32]);
         }
 
         /**
-     * @internal
-     *
-     * Converts the optional signature to a SignatureDto that can be serialized.
-     */
-        protected SignatureDto GetSignatureAsBuilder()
+         * @internal
+         *
+         * Converts the optional signature to a SignatureDto that can be serialized.
+         */
+        protected virtual SignatureDto GetSignatureAsBuilder()
         {
             return new SignatureDto(Signature != null ? ConvertUtils.GetBytes(Signature) : new byte[64]);
         }
@@ -351,10 +351,10 @@ namespace Symnity.Model.Transactions
          * @param signer - Innre transaction signer.
          * @returns InnerTransaction
          */
-        public virtual T ToAggregate<T>(T self, PublicAccount signer) where T : Transaction
+        public virtual Transaction ToAggregate(PublicAccount signer)
         {
-            self.Signer = signer;
-            return self;
+            Signer = signer;
+            return this;
         }
         
         /**

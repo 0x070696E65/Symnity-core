@@ -157,6 +157,16 @@ namespace Symnity.Model.Transactions
         
         /**
          * @internal
+         *
+         * Converts the optional signer to a KeyDto that can be serialized.
+         */
+        protected override PublicKeyDto GetSignerAsBuilder()
+        {
+            return Signer?.ToBuilder() ?? new PublicKeyDto(new byte[32]);
+        }
+        
+        /**
+         * @internal
          * @returns {EmbeddedTransactionBuilder}
          */
         public override EmbeddedTransactionBuilder ToEmbeddedTransaction() {
