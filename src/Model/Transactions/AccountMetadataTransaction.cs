@@ -113,20 +113,30 @@ namespace Symnity.Model.Transactions
         }
         
         /**
+         * @override Transaction.size()
+         * @description get the byte size of a transaction using the builder
+         * @returns {number}
+         * @memberof TransferTransaction
+         */ 
+        public override int GetSize() {
+            return _payloadSize ?? CreateBuilder().GetSize();
+        }
+        
+        /**
         * @internal
         * @returns {byte[]}
         */
-        protected override byte[] GenerateBytes()
+        public override byte[] GenerateBytes()
         {
             return CreateBuilder().Serialize();
         }
         
-        /**
+        /*
          * @description Serialize a transaction object
          * @returns {string}
          * @memberof Transaction
          */
-        public override string Serialize()
+        public new string Serialize()
         {
             return ConvertUtils.ToHex(GenerateBytes());
         }
@@ -151,17 +161,7 @@ namespace Symnity.Model.Transactions
                 ConvertUtils.Utf8ToByteArray(Value)
             );
         }
-        
-        /**
-         * @internal
-         *
-         * Converts the optional signer to a KeyDto that can be serialized.
-         */
-        protected override PublicKeyDto GetSignerAsBuilder()
-        {
-            return Signer?.ToBuilder() ?? new PublicKeyDto(new byte[32]);
-        }
-        
+
         /**
          * @internal
          * @returns {EmbeddedTransactionBuilder}
@@ -177,43 +177,6 @@ namespace Symnity.Model.Transactions
                 ValueSizeDelta,
                 ConvertUtils.Utf8ToByteArray(Value)
             );
-        }
-        
-        /**
-         * @override Transaction.size()
-         * @description get the byte size of a transaction using the builder
-         * @returns {number}
-         * @memberof TransferTransaction
-         */ 
-        public virtual int GetSize() {
-            return _payloadSize ?? CreateBuilder().GetSize();
-        }
-        
-        /**
-         * Set transaction maxFee using fee multiplier for **ONLY NONE AGGREGATE TRANSACTIONS**
-         * @param feeMultiplier The fee multiplier
-         * @returns {TransferTransaction}
-         */
-        public new AccountMetadataTransaction SetMaxFee(int feeMultiplier)
-        {
-            if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
-                throw new Exception("setMaxFee can only be used for none aggregate transactions.");
-            }
-            MaxFee = feeMultiplier * GetSize();
-            return this;
-        }
-        
-        /**
-         * Convert an aggregate transaction to an inner transaction including transaction signer.
-         * Signer is optional for `AggregateComplete` transaction `ONLY`.
-         * If no signer provided, aggregate transaction signer will be delegated on signing
-         * @param signer - Innre transaction signer.
-         * @returns InnerTransaction
-         */
-        public new AccountMetadataTransaction ToAggregate(PublicAccount signer)
-        {
-            Signer = signer;
-            return this;
         }
     }
 }

@@ -121,12 +121,13 @@ namespace Symnity.Model.Transactions
         }
         
         /**
-        * @internal
-        * @returns {byte[]}
-        */
-        protected override byte[] GenerateBytes()
-        {
-            return CreateBuilder().Serialize();
+         * @override Transaction.size()
+         * @description get the byte size of a transaction using the builder
+         * @returns {number}
+         * @memberof TransferTransaction
+         */ 
+        public override int GetSize() {
+            return _payloadSize ?? CreateBuilder().GetSize();
         }
         
         /**
@@ -139,6 +140,14 @@ namespace Symnity.Model.Transactions
             return ConvertUtils.ToHex(GenerateBytes());
         }
         
+        /*
+        * @internal
+        * @returns {byte[]}
+        */
+        public override byte[] GenerateBytes()
+        {
+            return CreateBuilder().Serialize();
+        }
         /**
          * @internal
          * @returns {TransactionBuilder}
@@ -150,7 +159,7 @@ namespace Symnity.Model.Transactions
                 GetSignerAsBuilder(),
                 VersionToDTO(),
                 (NetworkTypeDto)Enum.ToObject(typeof(NetworkTypeDto), (byte) NetworkType),
-                (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.ACCOUNT_METADATA),
+                (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.MOSAIC_METADATA),
                 new AmountDto(MaxFee),
                 new TimestampDto(Deadline.AdjustedValue),
                 new UnresolvedAddressDto(TargetAddress.EncodeUnresolvedAddress()),
@@ -162,40 +171,21 @@ namespace Symnity.Model.Transactions
         }
         
         /**
-         * @override Transaction.size()
-         * @description get the byte size of a transaction using the builder
-         * @returns {number}
-         * @memberof TransferTransaction
-         */ 
-        public override int GetSize() {
-            return _payloadSize ?? CreateBuilder().GetSize();
-        }
-        
-        /**
-         * Set transaction maxFee using fee multiplier for **ONLY NONE AGGREGATE TRANSACTIONS**
-         * @param feeMultiplier The fee multiplier
-         * @returns {TransferTransaction}
+         * @internal
+         * @returns {EmbeddedTransactionBuilder}
          */
-        public new MosaicMetadataTransaction SetMaxFee(int feeMultiplier)
-        {
-            if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
-                throw new Exception("setMaxFee can only be used for none aggregate transactions.");
-            }
-            MaxFee = feeMultiplier * GetSize();
-            return this;
-        }
-        
-        /**
-         * Convert an aggregate transaction to an inner transaction including transaction signer.
-         * Signer is optional for `AggregateComplete` transaction `ONLY`.
-         * If no signer provided, aggregate transaction signer will be delegated on signing
-         * @param signer - Innre transaction signer.
-         * @returns InnerTransaction
-         */
-        public MosaicMetadataTransaction ToAggregate(PublicAccount signer)
-        {
-            Signer = signer;
-            return this;
+        public override EmbeddedTransactionBuilder ToEmbeddedTransaction() {
+            return new EmbeddedMosaicMetadataTransactionBuilder(
+                GetSignerAsBuilder(),
+                VersionToDTO(),
+                (NetworkTypeDto)Enum.ToObject(typeof(NetworkTypeDto), (byte) NetworkType),
+                (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.MOSAIC_METADATA),
+                new UnresolvedAddressDto(TargetAddress.EncodeUnresolvedAddress()),
+                (long)ScopedMetadataKey,
+                new UnresolvedMosaicIdDto(TargetMosaicId.GetIdAsLong()),
+                ValueSizeDelta,
+                ConvertUtils.Utf8ToByteArray(Value)
+            );
         }
     }
 }

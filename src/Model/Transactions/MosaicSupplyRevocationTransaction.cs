@@ -80,14 +80,15 @@ namespace Symnity.Model.Transactions
             SourceAddress = sourceAddress;
             Mosaic = mosaic;
         }
-
+        
         /**
-        * @internal
-        * @returns {byte[]}
-        */
-        protected override byte[] GenerateBytes()
-        {
-            return CreateBuilder().Serialize();
+         * @override Transaction.size()
+         * @description get the byte size of a transaction using the builder
+         * @returns {number}
+         * @memberof TransferTransaction
+         */ 
+        public override int GetSize() {
+            return _payloadSize ?? CreateBuilder().GetSize();
         }
 
         /**
@@ -99,12 +100,21 @@ namespace Symnity.Model.Transactions
         {
             return ConvertUtils.ToHex(GenerateBytes());
         }
-
+        
+        /*
+        * @internal
+        * @returns {byte[]}
+        */
+        public override byte[] GenerateBytes()
+        {
+            return CreateBuilder().Serialize();
+        }
+        
         /**
          * @internal
          * @returns {TransactionBuilder}
          */
-        protected new MosaicSupplyRevocationTransactionBuilder CreateBuilder()
+        public new MosaicSupplyRevocationTransactionBuilder CreateBuilder()
         {
             var builder = new UnresolvedMosaicBuilder(
                 new UnresolvedMosaicIdDto(Mosaic.Id.GetIdAsLong()),
@@ -142,43 +152,6 @@ namespace Symnity.Model.Transactions
                 new UnresolvedAddressDto(SourceAddress.EncodeUnresolvedAddress()),
                 builder
             );
-        }
-        
-        /**
-         * @override Transaction.size()
-         * @description get the byte size of a transaction using the builder
-         * @returns {number}
-         * @memberof TransferTransaction
-         */ 
-        public override int GetSize() {
-            return _payloadSize ?? CreateBuilder().GetSize();
-        }
-        
-        /**
-         * Set transaction maxFee using fee multiplier for **ONLY NONE AGGREGATE TRANSACTIONS**
-         * @param feeMultiplier The fee multiplier
-         * @returns {TransferTransaction}
-         */
-        public new MosaicSupplyRevocationTransaction SetMaxFee(int feeMultiplier)
-        {
-            if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
-                throw new Exception("setMaxFee can only be used for none aggregate transactions.");
-            }
-            MaxFee = feeMultiplier * GetSize();
-            return this;
-        }
-        
-        /**
-         * Convert an aggregate transaction to an inner transaction including transaction signer.
-         * Signer is optional for `AggregateComplete` transaction `ONLY`.
-         * If no signer provided, aggregate transaction signer will be delegated on signing
-         * @param signer - Innre transaction signer.
-         * @returns InnerTransaction
-         */
-        public MosaicSupplyRevocationTransaction ToAggregate(PublicAccount signer)
-        {
-            Signer = signer;
-            return this;
         }
     }
 }

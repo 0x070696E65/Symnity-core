@@ -12,7 +12,7 @@ using Symnity.Model.Network;
 namespace Symnity.Model.Transactions
 {
     [Serializable]
-    public class Transaction
+    public abstract class Transaction
     {
         /**
      * Transaction payload size
@@ -270,15 +270,11 @@ namespace Symnity.Model.Transactions
         * @internal
         * @returns {byte[]}
         */
-        protected virtual byte[] GenerateBytes()
+        public virtual byte[] GenerateBytes()
         {
             return CreateBuilder.Serialize();
         }
-
-        /*
-        * @internal
-        * @returns {byte[]}
-        */
+        
         public TransactionBuilder CreateBuilder;
         
         /*
@@ -288,7 +284,7 @@ namespace Symnity.Model.Transactions
          */
         public virtual string Serialize()
         {
-         return ConvertUtils.ToHex(GenerateBytes());
+            return ConvertUtils.ToHex(GenerateBytes());
         }
 
         public virtual EmbeddedTransactionBuilder ToEmbeddedTransaction()
@@ -335,7 +331,7 @@ namespace Symnity.Model.Transactions
          * @param feeMultiplier The fee multiplier
          * @returns {TransferTransaction}
          */
-        public virtual Transaction SetMaxFee(int feeMultiplier)
+        public Transaction SetMaxFee(int feeMultiplier)
         {
             if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
                 throw new Exception("setMaxFee can only be used for none aggregate transactions.");
@@ -351,7 +347,7 @@ namespace Symnity.Model.Transactions
          * @param signer - Innre transaction signer.
          * @returns InnerTransaction
          */
-        public virtual Transaction ToAggregate(PublicAccount signer)
+        public Transaction ToAggregate(PublicAccount signer)
         {
             Signer = signer;
             return this;

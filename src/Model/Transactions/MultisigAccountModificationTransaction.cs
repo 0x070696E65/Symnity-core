@@ -106,10 +106,20 @@ namespace Symnity.Model.Transactions
         }
         
         /**
+         * @override Transaction.size()
+         * @description get the byte size of a transaction using the builder
+         * @returns {number}
+         * @memberof TransferTransaction
+         */ 
+        public override int GetSize() {
+            return _payloadSize ?? CreateBuilder().GetSize();
+        }
+        
+        /**
         * @internal
         * @returns {byte[]}
         */
-        protected override byte[] GenerateBytes()
+        public override byte[] GenerateBytes()
         {
             return CreateBuilder().Serialize();
         }
@@ -157,16 +167,6 @@ namespace Symnity.Model.Transactions
         
         /**
          * @internal
-         *
-         * Converts the optional signer to a KeyDto that can be serialized.
-         */
-        protected override PublicKeyDto GetSignerAsBuilder()
-        {
-            return Signer?.ToBuilder() ?? new PublicKeyDto(new byte[32]);
-        }
-        
-        /**
-         * @internal
          * @returns {EmbeddedTransactionBuilder}
          */
         public override EmbeddedTransactionBuilder ToEmbeddedTransaction() {
@@ -181,8 +181,8 @@ namespace Symnity.Model.Transactions
                 addressAdditionsDto.Add(new UnresolvedAddressDto(address.EncodeUnresolvedAddress()));
             });
             return new EmbeddedMultisigAccountModificationTransactionBuilder(
-                this.GetSignerAsBuilder(),
-                this.VersionToDTO(),
+                GetSignerAsBuilder(),
+                VersionToDTO(),
                 (NetworkTypeDto)Enum.ToObject(typeof(NetworkTypeDto), (byte) NetworkType),
                 (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.MULTISIG_ACCOUNT_MODIFICATION),
                 MinRemovalDelta,
@@ -190,43 +190,6 @@ namespace Symnity.Model.Transactions
                 addressAdditionsDto,
                 addressDeletionsDto
             );
-        }
-        
-        /**
-         * @override Transaction.size()
-         * @description get the byte size of a transaction using the builder
-         * @returns {number}
-         * @memberof TransferTransaction
-         */ 
-        public override int GetSize() {
-            return _payloadSize ?? CreateBuilder().GetSize();
-        }
-        
-        /**
-         * Set transaction maxFee using fee multiplier for **ONLY NONE AGGREGATE TRANSACTIONS**
-         * @param feeMultiplier The fee multiplier
-         * @returns {TransferTransaction}
-         */
-        public new MultisigAccountModificationTransaction SetMaxFee(int feeMultiplier)
-        {
-            if (Type == TransactionType.AGGREGATE_BONDED && Type == TransactionType.AGGREGATE_COMPLETE) {
-                throw new Exception("setMaxFee can only be used for none aggregate transactions.");
-            }
-            MaxFee = feeMultiplier * GetSize();
-            return this;
-        }
-        
-        /**
-         * Convert an aggregate transaction to an inner transaction including transaction signer.
-         * Signer is optional for `AggregateComplete` transaction `ONLY`.
-         * If no signer provided, aggregate transaction signer will be delegated on signing
-         * @param signer - Innre transaction signer.
-         * @returns InnerTransaction
-         */
-        public new MultisigAccountModificationTransaction ToAggregate(PublicAccount signer)
-        {
-            Signer = signer;
-            return this;
         }
     }
 }

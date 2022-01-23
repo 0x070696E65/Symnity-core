@@ -142,18 +142,8 @@ namespace Symnity.Model.Transactions
          * @returns {number}
          * @memberof TransferTransaction
          */ 
-        public override int GetSize()
-        {
+        public override int GetSize() {
             return _payloadSize ?? CreateBuilder().GetSize();
-        }
-        
-        /*
-        * @internal
-        * @returns {byte[]}
-        */
-        protected override byte[] GenerateBytes()
-        {
-            return CreateBuilder().Serialize();
         }
         
         /**
@@ -167,10 +157,19 @@ namespace Symnity.Model.Transactions
         }
         
         /*
+        * @internal
+        * @returns {byte[]}
+        */
+        public override byte[] GenerateBytes()
+        {
+            return CreateBuilder().Serialize();
+        }
+        
+        /*
          * @internal
          * @returns {TransactionBuilder}
          */
-        private new AggregateCompleteTransactionBuilder CreateBuilder()
+        public new AggregateCompleteTransactionBuilder CreateBuilder()
         {
             var embeddedTransactions = 
                 new List<Transaction>(InnerTransactions).Select(transaction => transaction.ToEmbeddedTransaction());
