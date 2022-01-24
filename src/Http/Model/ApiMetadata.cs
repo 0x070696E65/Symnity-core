@@ -13,7 +13,7 @@ namespace Symnity.Http.Model
     [Serializable]
     public class ApiMetadata : MonoBehaviour
     {
-        public static async UniTask<Metadata> CreateMetadataFromApi(MetadataSearchCriteria searchCriteria)
+        public static async UniTask<Metadata> CreateMetadataFromApi(string node, MetadataSearchCriteria searchCriteria)
         {
             try
             {
@@ -23,7 +23,7 @@ namespace Symnity.Http.Model
                     ? "&targetAddress=" + searchCriteria.Id
                     : "&targetId=" + searchCriteria.Id;
 
-                var metadataRootData = await HttpUtiles.GetDataFromApi(param);
+                var metadataRootData = await HttpUtiles.GetDataFromApi(node, param);
                 if (metadataRootData["data"] == null) throw new Exception("metaRootData is null");
                 if (metadataRootData["data"][0] == null) throw new Exception("metaDataFirst is null");
                 var metaDataFirst = metadataRootData["data"][0].ToString().Replace("\r", "").Replace("\n", "");

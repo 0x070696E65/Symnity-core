@@ -10,10 +10,10 @@ namespace Symnity.Http.Model
     [Serializable]
     public class ApiMultisig : MonoBehaviour
     {
-        public static async UniTask<ApiMultisigInfo> CreateAccountFromApi(string address)
+        public static async UniTask<ApiMultisigInfo> CreateAccountFromApi(string node, string address)
         {
             var param = "/account/" + address + "/multisig";
-            var multisigData = await HttpUtiles.GetDataFromApi(param);
+            var multisigData = await HttpUtiles.GetDataFromApi(node, param);
             if (multisigData["multisig"] == null) throw new Exception("multisigData is null");
             var multisigInfo = JObject.Parse(multisigData["multisig"].ToString().Replace("\r", "").Replace("\n", ""));
             var cosignatoryAddresses = new List<string>();

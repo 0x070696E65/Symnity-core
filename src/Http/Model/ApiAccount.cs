@@ -14,12 +14,12 @@ namespace Symnity.Http.Model
     [Serializable]
     public class ApiAccount : MonoBehaviour
     {
-        public static async UniTask<AccountInfo> CreateAccountFromApi(string address)
+        public static async UniTask<AccountInfo> CreateAccountFromApi(string node, string address)
         {
             try
             {
                 var param = "/accounts/" + address;
-                var accountRootData = await HttpUtiles.GetDataFromApi(param);
+                var accountRootData = await HttpUtiles.GetDataFromApi(node, param);
                 if (accountRootData["account"] == null) throw new Exception("account is null");
                 var accountData = accountRootData["account"].ToString().Replace("\r", "").Replace("\n", "");
                 var jsonAccountData = JObject.Parse(@accountData);

@@ -12,11 +12,11 @@ namespace Symnity.Http
 {
     public class HttpUtiles : MonoBehaviour
     {
-        public static async UniTask<JObject> GetDataFromApi(string param)
+        public static async UniTask<JObject> GetDataFromApi(string node, string param)
         {
             try
             {
-                var url = ConstantValue.Node + param;
+                var url = node + param;
                 var webRequest = UnityWebRequest.Get(url);
                 await webRequest.SendWebRequest();
                 

@@ -15,11 +15,11 @@ namespace Symnity.Http.Model
 {
     public class ApiTransaction : MonoBehaviour
     {
-        public static async UniTask<TransferTransaction> CreateTransferTransactionFromApi(string hash)
+        public static async UniTask<TransferTransaction> CreateTransferTransactionFromApi(string node, string hash)
         {
             var param = "/transactions/confirmed/" + hash;
             Debug.Log(param);
-            var transactionRootData = await HttpUtiles.GetDataFromApi(param);
+            var transactionRootData = await HttpUtiles.GetDataFromApi(node, param);
             if (transactionRootData["transaction"] == null) throw new Exception("transaction is null");
             var transactionData = transactionRootData["transaction"].ToString().Replace("\r", "").Replace("\n", "");
             var jsonTransactionData = JObject.Parse(transactionData);
@@ -106,8 +106,7 @@ namespace Symnity.Http.Model
             }
         }
 
-        public static async UniTask<List<TransferTransaction>> CreateTransferTransactionsFromApi(
-            TransactionQueryParameters query)
+        public static async UniTask<List<TransferTransaction>> CreateTransferTransactionsFromApi(string node, TransactionQueryParameters query)
         {
             var param = "?";
             if (query.address != null) param += "&address=" + query.address;
@@ -127,7 +126,7 @@ namespace Symnity.Http.Model
 
             var url = "/transactions/confirmed" + param;
             Debug.Log(url);
-            var transactionRootData = await HttpUtiles.GetDataFromApi(url);
+            var transactionRootData = await HttpUtiles.GetDataFromApi(node, url);
             var root = JsonUtility.FromJson<Root>(transactionRootData.ToString());
             if (root.data.Count == 0) return null;
 
