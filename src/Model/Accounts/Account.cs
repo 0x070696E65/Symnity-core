@@ -1,6 +1,7 @@
 using System;
 using Symnity.Core.Crypto;
 using Symnity.Core.Format;
+using Symnity.Model.Messages;
 using Symnity.Model.Network;
 using Symnity.Model.Transactions;
 
@@ -25,7 +26,7 @@ namespace Symnity.Model.Accounts
         /**
          * The account keyPair, public and private key.
          */
-        public readonly KeyPair _keyPair;
+        public readonly KeyPair KeyPair;
 
         /**
          * Create an Account from a given private key
@@ -36,7 +37,7 @@ namespace Symnity.Model.Accounts
         public Account(Address address, KeyPair keyPair)
         {
             Address = address;
-            _keyPair = keyPair;
+            KeyPair = keyPair;
         }
         
         /**
@@ -70,11 +71,31 @@ namespace Symnity.Model.Accounts
         }
         
         /**
+         * Create a new encrypted Message
+         * @param message - Plain message to be encrypted
+         * @param recipientPublicAccount - Recipient public account
+         * @returns {EncryptedMessage}
+         */
+        public EncryptedMessage EncryptMessage(string message, PublicAccount recipientPublicAccount) {
+            return EncryptedMessage.Create(message, recipientPublicAccount, KeyPair);
+        }
+
+        /**
+         * Decrypts an encrypted message
+         * @param encryptedMessage - Encrypted message
+         * @param publicAccount - The public account originally encrypted the message
+         * @returns {PlainMessage}
+         */
+        public PlainMessage DecryptMessage(EncryptedMessage encryptedMessage, PublicAccount publicAccount) {
+            return EncryptedMessage.Decrypt(encryptedMessage, KeyPair, publicAccount);
+        }
+        
+        /**
          * Account public key.
          * @return {string}
          */
         public string GetPublicKey() {
-            return ConvertUtils.ToHex(_keyPair.publicKey);
+            return ConvertUtils.ToHex(KeyPair.publicKey);
         }
         
         /**
@@ -90,7 +111,7 @@ namespace Symnity.Model.Accounts
          * @return {string}
          */
         public string GetPrivateKey() {
-            return ConvertUtils.ToHex(_keyPair.privateKey);
+            return ConvertUtils.ToHex(KeyPair.privateKey);
         }
         
         /**

@@ -95,7 +95,10 @@ namespace Symnity.Core.Format
             var result = "";
             byteList.ForEach(b=>
             {
-                if (zero) result += Convert.ToChar(b);
+                if (zero)
+                {
+                    result += Convert.ToChar(b);
+                }
                 else if (b != 0)
                 {
                     result += Convert.ToChar(b);

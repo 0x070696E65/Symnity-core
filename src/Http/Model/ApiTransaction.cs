@@ -106,7 +106,7 @@ namespace Symnity.Http.Model
             }
         }
 
-        public static async UniTask<List<TransferTransaction>> CreateTransferTransactionsFromApi(string node, TransactionQueryParameters query)
+        public static async UniTask<Root> CreateTransferTransactionsFromApi(string node, TransactionQueryParameters query)
         {
             var param = "?";
             if (query.address != null) param += "&address=" + query.address;
@@ -125,10 +125,10 @@ namespace Symnity.Http.Model
             if (query.order != null) param += "&order=" + query.order;
 
             var url = "/transactions/confirmed" + param;
-            Debug.Log(url);
             var transactionRootData = await HttpUtiles.GetDataFromApi(node, url);
             var root = JsonUtility.FromJson<Root>(transactionRootData.ToString());
-            if (root.data.Count == 0) return null;
+            return root;
+            /*if (root.data.Count == 0) return null;
 
             var transactionList = new List<TransferTransaction>();
             root.data.ForEach(
@@ -140,12 +140,6 @@ namespace Symnity.Http.Model
                         mosaics.Add(new Mosaic(new MosaicId(mosaic.id.ToString()),
                             long.Parse(mosaic.amount.ToString())));
                     });
-                    Debug.Log(transaction.transaction.recipientAddress);
-                    Debug.Log(Address.CreateFromRawAddress(
-                        RawAddress.AddressToString(
-                            ConvertUtils.GetBytes(transaction.transaction.recipientAddress))));
-
-                    Debug.Log(transaction.transaction.message);
                     var tx = new TransferTransaction(
                         (NetworkType) Enum.ToObject(typeof(NetworkType), (byte) transaction.transaction.network),
                         (byte) transaction.transaction.version,
@@ -159,7 +153,7 @@ namespace Symnity.Http.Model
                     );
                     transactionList.Add(tx);
                 });
-            return transactionList;
+            return transactionList;*/
         }
 
         [Serializable]

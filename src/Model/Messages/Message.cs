@@ -1,4 +1,5 @@
 using System;
+using Symnity.Core.Format;
 
 namespace Symnity.Model.Messages
 {
@@ -17,6 +18,16 @@ namespace Symnity.Model.Messages
          * Message payload, it could be the message hex, encryped text or plain text depending on the message type.
          */
         public readonly string Payload;
+        
+        /**
+         * @internal
+         * @param hex
+         * @returns {string}
+         */
+        public static string DecodeHex(string hex)
+        {
+            return ConvertUtils.HexToChar(hex, true);
+        }
 
         /**
          * @internal

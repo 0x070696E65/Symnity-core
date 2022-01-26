@@ -15,31 +15,31 @@ namespace Symnity.Model.Transactions
         /**
          * The mosaic nonce.
          */
-        public readonly MosaicNonce nonce;
+        public readonly MosaicNonce Nonce;
 
         /**
          * The mosaic id.
          */
-        public readonly MosaicId mosaicId;
+        public readonly MosaicId MosaicId;
 
         /**
          * The mosaic properties.
          */
-        public readonly MosaicFlags flags;
+        public readonly MosaicFlags Flags;
 
         /**
          * Mosaic divisibility
          */
-        public readonly byte divisibility;
+        public readonly byte Divisibility;
 
         /**
          * Mosaic duration, 0 value for eternal mosaic
          */
-        public readonly BlockDuration duration;
+        public readonly BlockDuration Duration;
 
-        private string signature;
-        private PublicAccount signer;
-        private TransactionInfo transactionInfo;
+        private string Signature;
+        private PublicAccount Signer;
+        private TransactionInfo TransactionInfo;
         
         /**
          * Create a mosaic creation transaction object
@@ -112,11 +112,11 @@ namespace Symnity.Model.Transactions
         )
         : base(TransactionType.MOSAIC_DEFINITION, networkType, version, deadline, maxFee, signature, signer, transactionInfo)
         {
-            this.nonce = nonce;
-            this.mosaicId = mosaicId;
-            this.flags = flags;
-            this.divisibility = divisibility;
-            this.duration = duration;
+            Nonce = nonce;
+            MosaicId = mosaicId;
+            Flags = flags;
+            Divisibility = divisibility;
+            Duration = duration;
         }
 
         /**
@@ -162,11 +162,11 @@ namespace Symnity.Model.Transactions
                 (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.MOSAIC_DEFINITION),
                 new AmountDto(MaxFee),
                 new TimestampDto(Deadline.AdjustedValue),
-                new MosaicIdDto(mosaicId.GetIdAsLong()),
-                new BlockDurationDto(duration.GetDuration()),
-                new MosaicNonceDto(nonce.nonce),
-                GeneratorUtils.ToSet<MosaicFlagsDto>(flags.GetValue()),
-                divisibility
+                new MosaicIdDto(MosaicId.GetIdAsLong()),
+                new BlockDurationDto(Duration.GetDuration()),
+                new MosaicNonceDto(Nonce.nonce),
+                GeneratorUtils.ToSet<MosaicFlagsDto>(Flags.GetValue()),
+                Divisibility
             );
         }
         
@@ -180,11 +180,11 @@ namespace Symnity.Model.Transactions
                 VersionToDTO(),
                 (NetworkTypeDto)Enum.ToObject(typeof(NetworkTypeDto), (byte) NetworkType),
                 (TransactionTypeDto)Enum.ToObject(typeof(TransactionTypeDto), (short) TransactionType.MOSAIC_DEFINITION),
-                new MosaicIdDto(mosaicId.GetIdAsLong()),
-                new BlockDurationDto(duration.GetDuration()),
-                new MosaicNonceDto(nonce.nonce),
-                GeneratorUtils.ToSet<MosaicFlagsDto>(flags.GetValue()),
-                divisibility
+                new MosaicIdDto(MosaicId.GetIdAsLong()),
+                new BlockDurationDto(Duration.GetDuration()),
+                new MosaicNonceDto(Nonce.nonce),
+                GeneratorUtils.ToSet<MosaicFlagsDto>(Flags.GetValue()),
+                Divisibility
             );
         }
 

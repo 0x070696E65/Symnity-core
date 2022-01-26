@@ -9,6 +9,11 @@ using Symnity.Model.Mosaics;
 using Symnity.Model.Network;
 using Symnity.Model.Transactions;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using Symnity.Core.Crypto;
+using Symnity.Http;
+using Symnity.Http.Model;
+using Symnity.Model.Lock;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -47,6 +52,219 @@ namespace Symnity.UnityScript
             return signedTx;
         }
 
+        public class Order
+        {
+            public string BuyMosaicId;
+            public int BuyMosaicAmount;
+            public string SellMosaicId;
+            public int SellMosaicAmount;
+            public Order(string buyMosaicId, int buyMosaicAmount, string sellMosaicId,int sellMosaicAmount)
+            {
+                BuyMosaicId = buyMosaicId;
+                BuyMosaicAmount = buyMosaicAmount;
+                SellMosaicId = sellMosaicId;
+                SellMosaicAmount = sellMosaicAmount;
+            }
+        }
+        
+        
+
+        // 購入意思トランザクション
+        public async static UniTask<SignedTransaction> ExchangeLikeBuyTransaction(string sellPublicKey, string buyPrivateKey, string exchangePrivateKey, string hash)
+        {
+            var deadLine = Deadline.Create(EpochAdjustment);
+            //var deadLine = Deadline.CreateFromAdjustedValue(EpochAdjustment);
+            var sellPublicAccount = PublicAccount.CreateFromPublicKey(sellPublicKey, _networkType);
+            var buyAccount = Account.CreateFromPrivateKey(buyPrivateKey, _networkType);
+            var exchangeAccount = Account.CreateFromPrivateKey(exchangePrivateKey, _networkType);
+            
+            var param = "/transactions/confirmed/" + hash;
+            var transactionRootData = await HttpUtiles.GetDataFromApi(Node, param);
+            var jToken = transactionRootData.SelectToken("transaction.transactions" , true);
+
+            object message = null;
+            object secret = null;
+            object orderObj = null;
+            if (jToken is {Type: JTokenType.Array})
+            {
+                var jArr = (JArray)jToken;
+                var messageToken = jArr[1].SelectToken("transaction.message");
+                var secretToken = jArr[0].SelectToken("transaction.secret");
+                var orderToken = jArr[2].SelectToken("transaction.message");
+                message = ((JValue)messageToken)?.Value;
+                secret = ((JValue)secretToken)?.Value;
+                orderObj = ((JValue)orderToken)?.Value;
+            }
+
+            if (message != null && secret != null && orderObj != null)
+            {
+                var proof = "";
+                var secretText = "";
+                var decodedMessage = Message.DecodeHex(message.ToString())[1..];
+                var encryptedMessage = new EncryptedMessage(decodedMessage, exchangeAccount.GetPublicAccount());
+                proof = exchangeAccount.DecryptMessage(encryptedMessage, sellPublicAccount).Payload;
+                secretText = secret.ToString();
+                var orderJsonHex = orderObj.ToString();
+                var order = JsonUtility.FromJson<Order>(ConvertUtils.HexToChar(orderJsonHex));
+                Debug.Log(order.SellMosaicId);
+                Debug.Log(order.SellMosaicAmount);
+                Debug.Log(order.BuyMosaicId);
+                Debug.Log(order.BuyMosaicAmount);
+                Debug.Log(proof);
+                Debug.Log(secretText);
+
+                var proofTx = SecretProofTransaction.Create(
+                    deadLine,
+                    LockHashAlgorithm.Op_Sha3_256,
+                    proof,
+                    secretText,
+                    exchangeAccount.Address,
+                    _networkType
+                );
+                
+                var sellMosaics = new List<Mosaic> {new Mosaic(new MosaicId(order.BuyMosaicId), order.BuyMosaicAmount)};
+                var returnTx = TransferTransaction.Create(
+                    deadLine,
+                    sellPublicAccount.Address,
+                    sellMosaics,
+                    PlainMessage.Create(""),
+                    _networkType);
+
+                var feeMosaics = new List<Mosaic> {new Mosaic(new MosaicId("3A8416DB2D53B6C8"), 1000000)};
+                var feeTx = TransferTransaction.Create(
+                    deadLine,
+                    exchangeAccount.Address,
+                    feeMosaics,
+                    PlainMessage.Create("payment fee"),
+                    _networkType
+                );
+
+                var buyMosaics = new List<Mosaic> {new (new MosaicId(order.SellMosaicId), order.SellMosaicAmount)};
+                var lastTx = TransferTransaction.Create(
+                    deadLine,
+                    buyAccount.Address,
+                    buyMosaics,
+                    PlainMessage.Create(""),
+                    _networkType
+                );
+
+                var aggTx = AggregateTransaction.CreateComplete(
+                    deadLine,
+                    new List<Transaction>
+                    {
+                        returnTx.ToAggregate(buyAccount.GetPublicAccount()),
+                        feeTx.ToAggregate(buyAccount.GetPublicAccount()),
+                        proofTx.ToAggregate(exchangeAccount.GetPublicAccount()),
+                        lastTx.ToAggregate(exchangeAccount.GetPublicAccount())
+                    },
+                    _networkType,
+                    new List<AggregateTransactionCosignature>()
+                ).SetMaxFeeForAggregate(100, 1);
+
+                var signedTransactionNotComplete = buyAccount.Sign(
+                    aggTx,
+                    GenerationHash
+                );
+
+                var cosignedTransaction = CosignatureTransaction.SignTransactionPayload(
+                    exchangeAccount,
+                    signedTransactionNotComplete.Payload,
+                    GenerationHash
+                );
+
+                var cosignatureSignedTransactions = new[]
+                {
+                    new CosignatureSignedTransaction(
+                        cosignedTransaction.ParentHash,
+                        cosignedTransaction.Signature,
+                        cosignedTransaction.SignerPublicKey
+                    )
+                };
+
+
+                var signedTransactionComplete = buyAccount.SignTransactionGivenSignatures(
+                    aggTx,
+                    cosignatureSignedTransactions,
+                    GenerationHash
+                );
+                Debug.Log(signedTransactionComplete.Hash);
+                return signedTransactionComplete;
+            }
+            else
+            {
+                throw new Exception("Some Data is missing");
+            }
+        }
+
+
+        // 疑似取引所購入意思表示トランザクション
+        public static SignedTransaction ExchangeLikeSellTransaction(string sellPrivateKey, string exchangePublicKey, string buyMosaicId, int buyAmount, string sellMosaicId, int sellAmount, int durationHour)
+        {
+            var deadLine = Deadline.Create(EpochAdjustment);
+            //var deadLine = Deadline.CreateFromAdjustedValue(EpochAdjustment);
+            var sellAccount = Account.CreateFromPrivateKey(sellPrivateKey, _networkType);
+            var exchangePublicAccount = PublicAccount.CreateFromPublicKey(exchangePublicKey, _networkType);
+
+            var random = Crypto.RandomBytes(20);
+            var proof = ConvertUtils.ToHex(random);
+            Debug.Log("proof: "+proof);
+            var hasher = SHA3Hasher.CreateHasher(32);
+            var array = new byte[32];
+            hasher.Hasher.BlockUpdate(random, 0, random.Length);
+            hasher.Hasher.DoFinal(array, 0);
+            var secret = ConvertUtils.ToHex(array).ToUpper();
+            Debug.Log("secret: "+secret);
+
+            var order = new Order(buyMosaicId, buyAmount, sellMosaicId, sellAmount);
+            var json = JsonUtility.ToJson(order);
+            Debug.Log("order: "+json);
+            
+            var coinLockTx = SecretLockTransaction.Create(
+                deadLine,
+                new Mosaic(new MosaicId(sellMosaicId), sellAmount),
+                new BlockDuration((durationHour * 3600) / 30), // assuming one block every 30 seconds
+                LockHashAlgorithm.Op_Sha3_256,
+                secret,
+                exchangePublicAccount.Address,
+                _networkType
+            );
+
+            var proofTx = TransferTransaction.Create(
+                deadLine,
+                exchangePublicAccount.Address,
+                new List<Mosaic> { },
+                sellAccount.EncryptMessage(proof, exchangePublicAccount),
+                _networkType
+            );
+            var mosaic = new Mosaic(new MosaicId("3A8416DB2D53B6C8"), 1000000);
+            var infoTx = TransferTransaction.Create(
+                deadLine,
+                exchangePublicAccount.Address,
+                new List<Mosaic> {mosaic},
+                PlainMessage.Create(json),
+                _networkType
+            );
+
+            var aggTx = AggregateTransaction.CreateComplete(
+                deadLine,
+                new List<Symnity.Model.Transactions.Transaction>
+                {
+                    coinLockTx.ToAggregate(sellAccount.GetPublicAccount()),
+                    proofTx.ToAggregate(sellAccount.GetPublicAccount()),
+                    infoTx.ToAggregate(sellAccount.GetPublicAccount())
+                },
+                _networkType,
+                new List<AggregateTransactionCosignature>()
+            ).SetMaxFeeForAggregate(100, 0);
+
+            var aggTxSigned = sellAccount.Sign(
+                aggTx,
+                GenerationHash
+            );
+            Debug.Log(aggTxSigned.Hash);
+            return aggTxSigned;
+        }
+
         // Revocableモザイク発行トランザクション
         public static void DefineRevocableMosaicTransaction()
         {
@@ -75,7 +293,7 @@ namespace Symnity.UnityScript
             //モザイク変更
             var mosaicChangeTx = MosaicSupplyChangeTransaction.Create(
                 deadLine,
-                mosaicDefTx.mosaicId,
+                mosaicDefTx.MosaicId,
                 MosaicSupplyChangeAction.Increase,
                 1000000,
                 _networkType
@@ -148,20 +366,20 @@ namespace Symnity.UnityScript
                 metaDataPower,
                 _networkType
             );
-            
+
 
             var aggregateTransaction = AggregateTransaction.CreateComplete(
                 deadLine,
                 new List<Transaction>
                 {
-                    playerChildAccountModificationTransaction.ToAggregate( characterAccount.GetPublicAccount()),
+                    playerChildAccountModificationTransaction.ToAggregate(characterAccount.GetPublicAccount()),
                     playerChildAccountMetadataLifeTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
                     playerChildAccountMetadataPowerTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
                 },
                 _networkType,
                 new List<AggregateTransactionCosignature>(),
                 100000);
-            
+
             var signedTransactionNotComplete = adminAccount.Sign(
                 aggregateTransaction,
                 GenerationHash
