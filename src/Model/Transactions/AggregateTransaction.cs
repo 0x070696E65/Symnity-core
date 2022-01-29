@@ -247,6 +247,37 @@ namespace Symnity.Model.Transactions
         
         /**
          * @internal
+         * Sign transaction with cosignatories creating a new SignedTransaction
+         * @param initiatorAccount - Initiator account
+         * @param cosignatories - The array of accounts that will cosign the transaction
+         * @param generationHash - Network generation hash hex
+         * @returns {SignedTransaction}
+         */
+        public SignedTransaction SignTransactionWithCosignatories(
+            Account initiatorAccount,
+            List<Account> cosignatories,
+            string generationHash
+        ) {
+            var signedTransaction = SignWith(initiatorAccount, generationHash);
+            var transactionHashBytes = ConvertUtils.GetBytes(signedTransaction.Hash);
+            var signedPayload = signedTransaction.Payload;
+            cosignatories.ForEach((cosigner) => {
+                var keyPairEncoded = KeyPair.CreateKeyPairFromPrivateKeyString(cosigner.GetPrivateKey());
+                var signature = KeyPair.Sign(keyPairEncoded, transactionHashBytes);
+                signedPayload += "0000000000000000" + cosigner.GetPublicKey() + ConvertUtils.ToHex(signature);
+            });
+
+            // Calculate new size
+            var size = "00000000" + (signedPayload.Length / 2).ToString("X");
+            var formatedSize = size.Substring(size.Length - 8);
+            var littleEndianSize =
+                formatedSize.Substring(6, 2) + formatedSize.Substring(4, 2) + formatedSize.Substring(2, 2) + formatedSize.Substring(0, 2);
+            signedPayload = littleEndianSize + signedPayload.Substring(8, signedPayload.Length - 8);
+            return new SignedTransaction(signedPayload, signedTransaction.Hash, initiatorAccount.GetPublicKey(), Type, NetworkType);
+        }
+        
+        /**
+         * @internal
          * Sign transaction with cosignatories collected from cosigned transactions and creating a new SignedTransaction
          * For off chain Aggregated Complete Transaction co-signing.
          * @param initiatorAccount - Initiator account

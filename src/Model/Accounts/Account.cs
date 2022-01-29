@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Symnity.Core.Crypto;
 using Symnity.Core.Format;
 using Symnity.Model.Messages;
@@ -122,6 +123,21 @@ namespace Symnity.Model.Accounts
          */
         public SignedTransaction Sign(Transaction transaction, string generationHash) {
             return transaction.SignWith(this, generationHash);
+        }
+        
+        /**
+         * Sign transaction with cosignatories creating a new SignedTransaction
+         * @param transaction - The aggregate transaction to be signed.
+         * @param cosignatories - The array of accounts that will cosign the transaction
+         * @param generationHash - Network generation hash hex
+         * @return {SignedTransaction}
+         */
+        public SignedTransaction SignTransactionWithCosignatories(
+            AggregateTransaction transaction, 
+            List<Account> cosignatories,
+            string generationHash
+        ) {
+            return transaction.SignTransactionWithCosignatories(this, cosignatories, generationHash);
         }
         
         /**

@@ -54,26 +54,19 @@ namespace Symnity.UnityScript
 
         public class Order
         {
-            public string BuyMosaicId;
-            public int BuyMosaicAmount;
-            public string SellMosaicId;
-            public int SellMosaicAmount;
-            public Order(string buyMosaicId, int buyMosaicAmount, string sellMosaicId,int sellMosaicAmount)
+            public string Id;
+            public int Amount;
+            public Order(string buyMosaicId, int buyMosaicAmount)
             {
-                BuyMosaicId = buyMosaicId;
-                BuyMosaicAmount = buyMosaicAmount;
-                SellMosaicId = sellMosaicId;
-                SellMosaicAmount = sellMosaicAmount;
+                Id = buyMosaicId;
+                Amount = buyMosaicAmount;
             }
         }
-        
-        
 
         // 購入意思トランザクション
-        public async static UniTask<SignedTransaction> ExchangeLikeBuyTransaction(string sellPublicKey, string buyPrivateKey, string exchangePrivateKey, string hash)
+        public async static UniTask<SignedTransaction> ExchangeBuyTransaction(string sellPublicKey, string buyPrivateKey, string exchangePrivateKey, string hash)
         {
             var deadLine = Deadline.Create(EpochAdjustment);
-            //var deadLine = Deadline.CreateFromAdjustedValue(EpochAdjustment);
             var sellPublicAccount = PublicAccount.CreateFromPublicKey(sellPublicKey, _networkType);
             var buyAccount = Account.CreateFromPrivateKey(buyPrivateKey, _networkType);
             var exchangeAccount = Account.CreateFromPrivateKey(exchangePrivateKey, _networkType);
@@ -106,13 +99,7 @@ namespace Symnity.UnityScript
                 secretText = secret.ToString();
                 var orderJsonHex = orderObj.ToString();
                 var order = JsonUtility.FromJson<Order>(ConvertUtils.HexToChar(orderJsonHex));
-                Debug.Log(order.SellMosaicId);
-                Debug.Log(order.SellMosaicAmount);
-                Debug.Log(order.BuyMosaicId);
-                Debug.Log(order.BuyMosaicAmount);
-                Debug.Log(proof);
-                Debug.Log(secretText);
-
+                
                 var proofTx = SecretProofTransaction.Create(
                     deadLine,
                     LockHashAlgorithm.Op_Sha3_256,
@@ -122,7 +109,7 @@ namespace Symnity.UnityScript
                     _networkType
                 );
                 
-                var sellMosaics = new List<Mosaic> {new Mosaic(new MosaicId(order.BuyMosaicId), order.BuyMosaicAmount)};
+                var sellMosaics = new List<Mosaic> {new Mosaic(new MosaicId("30576053E5626429"), 1)};
                 var returnTx = TransferTransaction.Create(
                     deadLine,
                     sellPublicAccount.Address,
@@ -139,7 +126,7 @@ namespace Symnity.UnityScript
                     _networkType
                 );
 
-                var buyMosaics = new List<Mosaic> {new (new MosaicId(order.SellMosaicId), order.SellMosaicAmount)};
+                var buyMosaics = new List<Mosaic> {new (new MosaicId("65DBB4CC472A5734"), 1)};
                 var lastTx = TransferTransaction.Create(
                     deadLine,
                     buyAccount.Address,
@@ -195,10 +182,9 @@ namespace Symnity.UnityScript
                 throw new Exception("Some Data is missing");
             }
         }
-
-
+        
         // 疑似取引所購入意思表示トランザクション
-        public static SignedTransaction ExchangeLikeSellTransaction(string sellPrivateKey, string exchangePublicKey, string buyMosaicId, int buyAmount, string sellMosaicId, int sellAmount, int durationHour)
+        public static SignedTransaction ExchangeLikeSellTransaction(string sellPrivateKey, string exchangePublicKey, string buyMosaicId, int buyAmount, string sellMosaicId, int sellAmount, int durationBlock)
         {
             var deadLine = Deadline.Create(EpochAdjustment);
             //var deadLine = Deadline.CreateFromAdjustedValue(EpochAdjustment);
@@ -207,22 +193,19 @@ namespace Symnity.UnityScript
 
             var random = Crypto.RandomBytes(20);
             var proof = ConvertUtils.ToHex(random);
-            Debug.Log("proof: "+proof);
             var hasher = SHA3Hasher.CreateHasher(32);
             var array = new byte[32];
             hasher.Hasher.BlockUpdate(random, 0, random.Length);
             hasher.Hasher.DoFinal(array, 0);
             var secret = ConvertUtils.ToHex(array).ToUpper();
-            Debug.Log("secret: "+secret);
 
-            var order = new Order(buyMosaicId, buyAmount, sellMosaicId, sellAmount);
+            var order = new Order(buyMosaicId, buyAmount);
             var json = JsonUtility.ToJson(order);
-            Debug.Log("order: "+json);
             
             var coinLockTx = SecretLockTransaction.Create(
                 deadLine,
                 new Mosaic(new MosaicId(sellMosaicId), sellAmount),
-                new BlockDuration((durationHour * 3600) / 30), // assuming one block every 30 seconds
+                new BlockDuration(durationBlock), // assuming one block every 30 seconds
                 LockHashAlgorithm.Op_Sha3_256,
                 secret,
                 exchangePublicAccount.Address,
