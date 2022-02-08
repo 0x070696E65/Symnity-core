@@ -155,6 +155,30 @@ namespace Symnity.Http.Model
                 });
             return transactionList;*/
         }
+        
+        public static async UniTask<Root> CreateUnconfirmedTransferTransactionsFromApi(string node, TransactionQueryParameters query)
+        {
+            var param = "?";
+            if (query.address != null) param += "&address=" + query.address;
+            if (query.recipientAddress != null) param += "&recipientAddress=" + query.recipientAddress;
+            if (query.signerPublicKey != null) param += "&signerPublicKey=" + query.signerPublicKey;
+            if (query.height != null) param += "&height=" + query.height;
+            if (query.fromHeight != null) param += "&fromHeight=" + query.fromHeight;
+            if (query.fromTransferAmount != null) param += "&fromTransferAmount=" + query.fromTransferAmount;
+            if (query.toTransferAmount != null) param += "&toTransferAmount=" + query.toTransferAmount;
+            if (query.type != null) param += "&type=" + query.type;
+            if (query.embedded != null) param += "&embedded=" + query.embedded;
+            if (query.transferMosaicId != null) param += "&transferMosaicId=" + query.transferMosaicId;
+            if (query.pageSize != null) param += "&pageSize=" + query.pageSize;
+            if (query.pageNumber != null) param += "&pageNumber=" + query.pageNumber;
+            if (query.offset != null) param += "&offset=" + query.offset;
+            if (query.order != null) param += "&order=" + query.order;
+
+            var url = "/transactions/unconfirmed" + param;
+            var transactionRootData = await HttpUtiles.GetDataFromApi(node, url);
+            var root = JsonUtility.FromJson<Root>(transactionRootData.ToString());
+            return root;
+        }
 
         [Serializable]
         public class Meta
