@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Symbol.Builders;
 
 namespace Symnity.Model.Mosaics
 {
@@ -41,12 +42,12 @@ namespace Symnity.Model.Mosaics
          * @param divisibility
          * @param duration
          */
-        MosaicFlags(bool supplyMutable, bool transferable, bool restrictable = false, bool revokable = false)
+        public MosaicFlags(int flags)
         {
-            SupplyMutable = supplyMutable;
-            Transferable = transferable;
-            Restrictable = restrictable;
-            Revokable = revokable;
+            SupplyMutable = (flags & (int)MosaicFlagsDto.SUPPLY_MUTABLE) != 0;
+            Transferable = (flags & (int)MosaicFlagsDto.TRANSFERABLE) != 0;
+            Restrictable = (flags & (int)MosaicFlagsDto.RESTRICTABLE) != 0;
+            Revokable = (flags & (int)MosaicFlagsDto.REVOKABLE) != 0;
         }
 
         /**
@@ -58,7 +59,24 @@ namespace Symnity.Model.Mosaics
              */
         public static MosaicFlags Create(bool supplyMutable, bool transferable, bool restrictable = false, bool revokable = false)
         {
-            return new MosaicFlags( supplyMutable, transferable, restrictable, revokable);
+            return new MosaicFlags(ToFlag(supplyMutable, transferable, restrictable, revokable));
+        }
+        
+        /**
+         * It "adds up" individual flags into a bit wise number flag.
+                    *
+                    * @param supplyMutable - if the supply is mutable. First flag.
+                    * @param transferable - if the balance can be transferred. Second flag.
+                    * @param restrictable - if the transaction can be restricted. Third flag.
+                    * @param revokable - if the balance can be revoked. Fourth flag.
+                    * @private
+                    */
+        private static int ToFlag(
+            bool supplyMutable,
+            bool transferable,
+            bool restrictable,
+            bool revokable) {
+            return (supplyMutable ? 1 : 0) + (transferable ? 2 : 0) + (restrictable ? 4 : 0) + (revokable ? 8 : 0);
         }
 
         /**
@@ -67,7 +85,7 @@ namespace Symnity.Model.Mosaics
         */
         public int GetValue()
         {
-            return (SupplyMutable ? 1 : 0) + (Transferable ? 2 : 0) + (Restrictable ? 4 : 0) + (Revokable ? 8 : 0);
+            return ToFlag(SupplyMutable,Transferable,Restrictable,Revokable);
         }
     }
 }

@@ -54,12 +54,12 @@ namespace Symnity.UnityScript
         private const string Node = "";
         private const int EpochAdjustment = 1637848847;
         private const string GenerationHash = "7FCCD304802016BEBBCD342A332F91FF1F3BB5E902988B352697BE245F48E836";
-        private const string PrivateKey1 = "";
-        private static Account _account1 = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
-        private const string PrivateKey2 = "";
-        private static Account _account2 = Account.CreateFromPrivateKey(PrivateKey2, _networkType);
-        private const string PublicKey1 = "";
-        private static PublicAccount _publicAccount1 = PublicAccount.CreateFromPublicKey(PublicKey1, _networkType);
+        private const string AdminAccountPrivateKey = "";
+        private static Account _adminAccount = Account.CreateFromPrivateKey(AdminAccountPrivateKey, _networkType);
+        private const string PlayerAccountPrivateKey = "";
+        private static Account _playerAccount = Account.CreateFromPrivateKey(PlayerAccountPrivateKey, _networkType);
+        private const string CharacterAccountPrivateKey = "";
+        private static Account _characterAccount = Account.CreateFromPrivateKey(CharacterAccountPrivateKey, _networkType);
         
         // 購入意思トランザクション
         private async UniTask<AggregateTransaction> CreateExchangeBuyTransaction(
@@ -86,63 +86,55 @@ namespace Symnity.UnityScript
                 secret = ((JValue) secretToken)?.Value;
                 orderObj = ((JValue) orderToken)?.Value; 
             }
-            
-            if (message != null && secret != null && orderObj != null)
-            {
-                var proof = "";
-                var secretText = "";
-                var decodedMessage = Message.DecodeHex(message.ToString())[1..];
-                var encryptedMessage = new EncryptedMessage(decodedMessage, _account1.GetPublicAccount());
-                proof = _account1.DecryptMessage(encryptedMessage, sellPublicAccount).Payload;
-                secretText = secret.ToString();
+
+            if (message == null || secret == null || orderObj == null) throw new Exception("Some Data is missing");
+            var decodedMessage = Message.DecodeHex(message.ToString())[1..];
+            var encryptedMessage = new EncryptedMessage(decodedMessage, _adminAccount.GetPublicAccount());
+            var proof = _adminAccount.DecryptMessage(encryptedMessage, sellPublicAccount).Payload;
+            var secretText = secret.ToString();
  
-                var proofTx = SecretProofTransaction.Create(
-                    deadLine,
-                    LockHashAlgorithm.Op_Sha3_256,
-                    proof,
-                    secretText,
-                    _account1.Address,
-                    _networkType
-                );
+            var proofTx = SecretProofTransaction.Create(
+                deadLine,
+                LockHashAlgorithm.Op_Sha3_256,
+                proof,
+                secretText,
+                _adminAccount.Address,
+                _networkType
+            );
 
-                var sellMosaics = new List<Mosaic>
-                    {new(new MosaicId(orderInfoOrderMosaicID), orderInfoOrderAmount)};
+            var sellMosaics = new List<Mosaic>
+                {new(new MosaicId(orderInfoOrderMosaicID), orderInfoOrderAmount)};
 
-                var returnTx = TransferTransaction.Create(
-                    deadLine,
-                    sellPublicAccount.Address,
-                    sellMosaics,
-                    PlainMessage.Create(""),
-                    _networkType);
+            var returnTx = TransferTransaction.Create(
+                deadLine,
+                sellPublicAccount.Address,
+                sellMosaics,
+                PlainMessage.Create(""),
+                _networkType);
                 
-                var buyMosaics = new List<Mosaic>
-                    {new(new MosaicId(orderInfoSupplyMosaicID), orderInfoSupplyAmount)};
+            var buyMosaics = new List<Mosaic>
+                {new(new MosaicId(orderInfoSupplyMosaicID), orderInfoSupplyAmount)};
 
-                var lastTx = TransferTransaction.Create(
-                    deadLine,
-                    buyPublicAccount.Address,
-                    buyMosaics,
-                    PlainMessage.Create(""),
-                    _networkType
-                );
+            var lastTx = TransferTransaction.Create(
+                deadLine,
+                buyPublicAccount.Address,
+                buyMosaics,
+                PlainMessage.Create(""),
+                _networkType
+            );
                 
-                var aggTx = AggregateTransaction.CreateComplete(
-                    deadLine,
-                    new List<Symnity.Model.Transactions.Transaction>
-                    {
-                        proofTx.ToAggregate(_account1.GetPublicAccount()),
-                        returnTx.ToAggregate(buyPublicAccount),
-                        lastTx.ToAggregate(_account1.GetPublicAccount())
-                    },
-                    _networkType,
-                    new List<AggregateTransactionCosignature>()
-                ).SetMaxFeeForAggregate(100, 1);
-                return aggTx;
-            }
-            else
-            {
-                throw new Exception("Some Data is missing");
-            }
+            var aggTx = AggregateTransaction.CreateComplete(
+                deadLine,
+                new List<Transaction>
+                {
+                    proofTx.ToAggregate(_adminAccount.GetPublicAccount()),
+                    returnTx.ToAggregate(buyPublicAccount),
+                    lastTx.ToAggregate(_adminAccount.GetPublicAccount())
+                },
+                _networkType,
+                new List<AggregateTransactionCosignature>()
+            ).SetMaxFeeForAggregate(100, 1);
+            return aggTx;
         }
 
         private static SignedTransaction CreateExchangeBuySignedTransaction(AggregateTransaction aggTx,
@@ -150,7 +142,7 @@ namespace Symnity.UnityScript
         {
             var signedTransactionComplete = buyAccount.SignTransactionWithCosignatories(
                 aggTx,
-                new List<Account>{_account1},
+                new List<Account>{_adminAccount},
                 GenerationHash
             );
             return signedTransactionComplete;
@@ -158,8 +150,8 @@ namespace Symnity.UnityScript
 
         public class ExchangeSellTransaction
         {
-            public long Fee;
-            public SignedTransaction SignedTransaction;
+            private long Fee;
+            private SignedTransaction SignedTransaction;
 
             public ExchangeSellTransaction(long fee, SignedTransaction signedTransaction)
             {
@@ -177,7 +169,7 @@ namespace Symnity.UnityScript
             var sellAccount = Account.CreateFromPrivateKey(sellPrivateKey, _networkType);
             var exchangePublicAccount = PublicAccount.CreateFromPublicKey(exchangePublicKey, _networkType);
 
-            var random = Symnity.Core.Crypto.Crypto.RandomBytes(20);
+            var random = Crypto.RandomBytes(20);
             var proof = ConvertUtils.ToHex(random);
             var hasher = SHA3Hasher.CreateHasher(32);
             var array = new byte[32];
@@ -201,21 +193,21 @@ namespace Symnity.UnityScript
             var proofTx = TransferTransaction.Create(
                 deadLine,
                 exchangePublicAccount.Address,
-                new List<Symnity.Model.Mosaics.Mosaic> { },
+                new List<Mosaic>(),
                 sellAccount.EncryptMessage(proof, exchangePublicAccount),
                 _networkType
             );
             var infoTx = TransferTransaction.Create(
                 deadLine,
                 exchangePublicAccount.Address,
-                new List<Symnity.Model.Mosaics.Mosaic> {},
+                new List<Mosaic>(),
                 PlainMessage.Create(json),
                 _networkType
             );
 
             var aggTx = AggregateTransaction.CreateComplete(
                 deadLine,
-                new List<Symnity.Model.Transactions.Transaction>
+                new List<Transaction>
                 {
                     coinLockTx.ToAggregate(sellAccount.GetPublicAccount()),
                     proofTx.ToAggregate(sellAccount.GetPublicAccount()),
@@ -235,8 +227,8 @@ namespace Symnity.UnityScript
 
         public class Order
         {
-            public string Id;
-            public int Amount;
+            private string Id;
+            private int Amount;
             public Order(string buyMosaicId, int buyMosaicAmount)
             {
                 Id = buyMosaicId;
@@ -247,8 +239,6 @@ namespace Symnity.UnityScript
         // Revocableモザイク発行トランザクション
         public static SignedTransaction DefineRevocableMosaicTransaction()
         {
-            var mosaicCreatorAccount = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
-
             //revocable モザイク発行
             const bool isSupplyMutable = true;
             const bool isTransferable = true;
@@ -257,12 +247,11 @@ namespace Symnity.UnityScript
 
             var deadLine = Deadline.Create(EpochAdjustment);
             var nonce = MosaicNonce.CreateRandom(4);
-            //var nonce = new MosaicNonce(1234);
 
             var mosaicDefTx = MosaicDefinitionTransaction.Create(
                 deadLine,
                 nonce,
-                MosaicId.CreateFromNonce(nonce, mosaicCreatorAccount.Address),
+                MosaicId.CreateFromNonce(nonce, _adminAccount.Address),
                 MosaicFlags.Create(isSupplyMutable, isTransferable, isRestrictable, isRevocable),
                 0,
                 new BlockDuration(0),
@@ -282,14 +271,14 @@ namespace Symnity.UnityScript
                 deadLine,
                 new List<Transaction>
                 {
-                    mosaicDefTx.ToAggregate(mosaicCreatorAccount.GetPublicAccount()),
-                    mosaicChangeTx.ToAggregate(mosaicCreatorAccount.GetPublicAccount())
+                    mosaicDefTx.ToAggregate(_adminAccount.GetPublicAccount()),
+                    mosaicChangeTx.ToAggregate(_adminAccount.GetPublicAccount())
                 },
                 _networkType,
-                new List<AggregateTransactionCosignature>(),
-                1000000);
+                new List<AggregateTransactionCosignature>())
+                .SetMaxFeeForAggregate(100, 0);
 
-            return mosaicCreatorAccount.Sign(
+            return _adminAccount.Sign(
                 aggregateTransaction,
                 GenerationHash
             );
@@ -298,13 +287,7 @@ namespace Symnity.UnityScript
         // ゲーム開始時にプレイヤーアカウントにキャラクターアカウント付与（メタデータ初期）
         public static SignedTransaction MultisigAndMetadataAggregateTransaction()
         {
-            var adminAccount = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
-            var playerMasterAccount = Account.CreateFromPrivateKey(PrivateKey2, _networkType);
-            var characterAccount = Account.GenerateNewAccount(_networkType);
-            Debug.Log(characterAccount.Address.Plain());
-
             var deadLine = Deadline.Create(EpochAdjustment);
-
             var keyLife = KeyGenerator.GenerateUInt64Key("Life");
             var keyAttack = KeyGenerator.GenerateUInt64Key("Attack");
 
@@ -317,7 +300,7 @@ namespace Symnity.UnityScript
                 1,
                 new List<UnresolvedAddress>
                 {
-                    playerMasterAccount.Address
+                    _playerAccount.Address
                 },
                 new List<UnresolvedAddress>(),
                 _networkType
@@ -325,7 +308,7 @@ namespace Symnity.UnityScript
 
             var playerChildAccountMetadataLifeTransactionL = AccountMetadataTransaction.Create(
                 deadLine,
-                characterAccount.Address,
+                _characterAccount.Address,
                 keyLife,
                 (short) metaDataLife.Length,
                 metaDataLife,
@@ -334,7 +317,7 @@ namespace Symnity.UnityScript
 
             var playerChildAccountMetadataPowerTransactionL = AccountMetadataTransaction.Create(
                 deadLine,
-                characterAccount.Address,
+                _characterAccount.Address,
                 keyAttack,
                 (short) metaDataPower.Length,
                 metaDataPower,
@@ -346,17 +329,17 @@ namespace Symnity.UnityScript
                 deadLine,
                 new List<Transaction>
                 {
-                    playerChildAccountModificationTransaction.ToAggregate(characterAccount.GetPublicAccount()),
-                    playerChildAccountMetadataLifeTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
-                    playerChildAccountMetadataPowerTransactionL.ToAggregate(adminAccount.GetPublicAccount()),
+                    playerChildAccountModificationTransaction.ToAggregate(_characterAccount.GetPublicAccount()),
+                    playerChildAccountMetadataLifeTransactionL.ToAggregate(_adminAccount.GetPublicAccount()),
+                    playerChildAccountMetadataPowerTransactionL.ToAggregate(_adminAccount.GetPublicAccount()),
                 },
                 _networkType,
-                new List<AggregateTransactionCosignature>(),
-                100000);
+                new List<AggregateTransactionCosignature>()
+                ).SetMaxFeeForAggregate(100, 2);
 
-            var signedTransactionComplete = adminAccount.SignTransactionWithCosignatories(
+            var signedTransactionComplete = _adminAccount.SignTransactionWithCosignatories(
                 aggregateTransaction,
-                new List<Account>{playerMasterAccount, characterAccount},
+                new List<Account>{_playerAccount, _characterAccount},
                 GenerationHash
             );
             
@@ -369,12 +352,12 @@ namespace Symnity.UnityScript
             var deadLine = Deadline.Create(EpochAdjustment);
             var revTx = MosaicSupplyRevocationTransaction.Create(
                 deadLine,
-                _account2.Address,
+                _playerAccount.Address,
                 new Mosaic(new MosaicId("65DBB4CC472A5734"), amount),
                 _networkType
             ).SetMaxFee(100);
 
-            return _account1.Sign(revTx, GenerationHash);
+            return _adminAccount.Sign(revTx, GenerationHash);
         }
         
         [Serializable]
@@ -393,11 +376,11 @@ namespace Symnity.UnityScript
         {
             Debug.Log("Floor Escape: " + floorCount);
             var EscapeMosaicId = "";
-            var message = JObject.FromObject(new ClearFloor(_publicAccount1.Address.Plain(), floorCount)).ToString();
+            var message = JObject.FromObject(new ClearFloor(_characterAccount.Address.Plain(), floorCount)).ToString();
             var deadLine = Deadline.Create(EpochAdjustment);
             var transferTx = TransferTransaction.Create(
                 deadLine,
-                _account2.Address,
+                _playerAccount.Address,
                 new List<Mosaic> {new(new MosaicId(EscapeMosaicId), 1)},
                 new Message(MessageType.PlainMessage, message),
                 _networkType
@@ -405,22 +388,22 @@ namespace Symnity.UnityScript
             
             var revokeTx = MosaicSupplyRevocationTransaction.Create(
                 deadLine,
-                _account2.Address,
+                _playerAccount.Address,
                 new Mosaic(new MosaicId(EscapeMosaicId), 1),
                 _networkType
             );
 
             var aggTx = AggregateTransaction.CreateComplete(
                 deadLine,
-                new List<Symnity.Model.Transactions.Transaction>
+                new List<Transaction>
                 {
-                    transferTx.ToAggregate(_account1.GetPublicAccount()),
-                    revokeTx.ToAggregate(_account1.GetPublicAccount())
+                    transferTx.ToAggregate(_adminAccount.GetPublicAccount()),
+                    revokeTx.ToAggregate(_adminAccount.GetPublicAccount())
                 },
                 _networkType,
                 new List<AggregateTransactionCosignature>()
             ).SetMaxFeeForAggregate(100, 0);
-            return _account1.Sign(aggTx, GenerationHash);
+            return _adminAccount.Sign(aggTx, GenerationHash);
         }
         
         public static SignedTransaction AddCoinTransaction(long pointsToAdd, string message = "")
@@ -429,12 +412,12 @@ namespace Symnity.UnityScript
             var deadLine = Deadline.Create(EpochAdjustment);
             var transferTx = TransferTransaction.Create(
                 deadLine,
-                _publicAccount1.Address,
+                _characterAccount.Address,
                 new List<Mosaic> {new(new MosaicId(coinMosaicId), pointsToAdd)},
                 new Message(MessageType.PlainMessage, message),
                 _networkType
             ).SetMaxFee(100);
-            return _account1.Sign(transferTx, GenerationHash);
+            return _adminAccount.Sign(transferTx, GenerationHash);
         }
 
         public static async UniTask<string> Announce(string payload)
@@ -466,20 +449,17 @@ namespace Symnity.UnityScript
         public static SignedTransaction SimpleTransferTransaction()
         {
             var deadLine = Deadline.Create(EpochAdjustment);
-            var senderAccount = Account.CreateFromPrivateKey(PrivateKey1, _networkType);
-            var receiverAccount = Account.CreateFromPrivateKey(PrivateKey2, _networkType);
             var message = PlainMessage.Create("Hello Symbol from NEM!");
             var mosaicId = new MosaicId("3A8416DB2D53B6C8");
             var mosaic = new Mosaic(mosaicId, 1000000);
             var transferTransaction = TransferTransaction.Create(
                 deadLine,
-                receiverAccount.Address,
+                _characterAccount.Address,
                 new List<Mosaic> {mosaic},
                 message,
-                _networkType,
-                100000
-            );
-            var signedTx = senderAccount.Sign(transferTransaction, GenerationHash);
+                _networkType
+            ).SetMaxFee(100);
+            var signedTx = _adminAccount.Sign(transferTransaction, GenerationHash);
             return signedTx;
         }
 
