@@ -22,7 +22,7 @@ namespace Symnity.Http.Model
                 param += searchCriteria.MetadataType == MetadataType.Account
                     ? "&targetAddress=" + searchCriteria.Id
                     : "&targetId=" + searchCriteria.Id;
-
+                
                 var metadataRootData = await HttpUtiles.GetDataFromApi(node, param);
                 if (metadataRootData["data"] == null) throw new Exception("metaRootData is null");
                 if (metadataRootData["data"][0] == null) throw new Exception("metaDataFirst is null");
@@ -40,7 +40,7 @@ namespace Symnity.Http.Model
                 if (jsonMetaDataEntry["metadataType"] == null) throw new Exception("metadataType is null");
                 if (jsonMetaDataEntry["value"] == null) throw new Exception("value is null");
                 if (jsonMetaData["id"] == null) throw new Exception("id is null");
-
+                
                 var id = searchCriteria.MetadataType == MetadataType.Account
                     ? null
                     : new Id(long.Parse(jsonMetaDataEntry["targetId"].ToString(),

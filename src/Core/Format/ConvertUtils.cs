@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using UnityEngine;
 
@@ -92,20 +93,31 @@ namespace Symnity.Core.Format
         public static string HexToChar(string hex, bool zero = false)
         {
             var byteList = new List<byte>(GetBytes(hex));
-            var result = "";
+            var result = new StringBuilder();
             byteList.ForEach(b=>
             {
                 if (zero)
                 {
-                    result += Convert.ToChar(b);
+                    result.Append(Convert.ToChar(b));
                 }
                 else if (b != 0)
                 {
-                    result += Convert.ToChar(b);
+                    result.Append(Convert.ToChar(b));
                     zero = true;
                 }
             });
-            return result;
+            return result.ToString();
+        }
+
+        public static string HexToChar2(string hex)
+        {
+            var byteList = new List<byte>(GetBytes(hex));
+            return Encoding.UTF8.GetString(byteList.ToArray());
+        }
+
+        public static string BigToHex(BigInteger big)
+        {
+            return ((long)big).ToString("X");
         }
 
         /**

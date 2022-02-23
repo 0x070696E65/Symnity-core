@@ -8,6 +8,7 @@ using Symnity.Core.Crypto;
 using Symnity.Core.Format;
 using Symnity.Model.Accounts;
 using Symnity.Model.Network;
+using UnityEngine;
 
 namespace Symnity.Model.Transactions
 {
