@@ -32,7 +32,7 @@ namespace Symnity.Model.Mosaics
          */
         public static MosaicNonce CreateRandom(byte length) {
             var nonce = Crypto.RandomBytes(length);
-            return new MosaicNonce(BitConverter.ToInt32(nonce));
+            return new MosaicNonce(BitConverter.ToInt32(nonce, 0));
         }
     }
 }
