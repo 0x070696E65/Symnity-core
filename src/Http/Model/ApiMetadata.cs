@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Newtonsoft.Json.Linq;
 using Symnity.Core.Format;
@@ -69,6 +70,53 @@ namespace Symnity.Http.Model
             {
                 throw new Exception("Error From CreateMetadataFromApi " + e.Message);
             }
+        }
+        
+        public static async UniTask<MetaRoot> CreateMetadatasFromApi(string node, MetadataSearchCriteria searchCriteria)
+        {
+            var param = "/metadata?&sourceAddress=" + searchCriteria.SourceAddress + "&pageSize=" + searchCriteria.PageSize + "&pageNumber=" + searchCriteria.PageNumber;
+                param += searchCriteria.MetadataType == MetadataType.Account
+                    ? "&targetAddress=" + searchCriteria.Id
+                    : "&targetId=" + searchCriteria.Id;
+
+                var metadataRootData = await HttpUtiles.GetDataFromApiString(node, param);
+                var re = JsonUtility.FromJson<MetaRoot>(metadataRootData); 
+                return re;
+        }
+        
+        [Serializable]
+        public class MetaMetadataEntry
+        {
+            public int version;
+            public string compositeHash;
+            public string sourceAddress;
+            public string targetAddress;
+            public string scopedMetadataKey;
+            public string targetId;
+            public int metadataType;
+            public int valueSize;
+            public string value;
+        }
+
+        [Serializable]
+        public class Datum
+        {
+            public MetaMetadataEntry metadataEntry;
+            public string id;
+        }
+
+        [Serializable]
+        public class MetaPagination
+        {
+            public int pageNumber;
+            public int pageSize;
+        }
+
+        [Serializable]
+        public class MetaRoot
+        {
+            public List<Datum> data;
+            public MetaPagination pagination;
         }
     }
 }

@@ -37,6 +37,31 @@ namespace Symnity.Http
             }
         }
         
+        public static async UniTask<string> GetDataFromApiString(string node, string param)
+        {
+            try
+            {
+                var url = node + param;
+                var webRequest = UnityWebRequest.Get(url);
+                await webRequest.SendWebRequest();
+                
+                if (webRequest.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    //エラー確認
+                    throw new Exception(webRequest.error);
+                }
+                else
+                {
+                    //結果確認
+                    return  webRequest.downloadHandler.text;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error From GetDataFromApi" + e.Message);
+            }
+        }
+        
 
         public static async Task Announce(string payload)
         {
