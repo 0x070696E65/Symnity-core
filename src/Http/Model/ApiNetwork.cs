@@ -16,6 +16,7 @@ namespace Symnity.Http.Model
             return networkRoot;
         }
 
+        [Serializable]
         public class Network
         {
             public string identifier;
@@ -25,6 +26,7 @@ namespace Symnity.Http.Model
             public string epochAdjustment;
         }
 
+        [Serializable]
         public class Chain
         {
             public bool enableVerifiableState;
@@ -57,11 +59,13 @@ namespace Symnity.Http.Model
             public string maxTransactionsPerBlock;
         }
 
+        [Serializable]
         public class Accountlink
         {
             public string dummy;
         }
 
+        [Serializable]
         public class Aggregate
         {
             public string maxTransactionsPerAggregate;
@@ -71,12 +75,14 @@ namespace Symnity.Http.Model
             public string maxBondedTransactionLifetime;
         }
 
+        [Serializable]
         public class Lockhash
         {
             public string lockedFundsPerAggregate;
             public string maxHashLockDuration;
         }
 
+        [Serializable]
         public class Locksecret
         {
             public string maxSecretLockDuration;
@@ -84,11 +90,13 @@ namespace Symnity.Http.Model
             public string maxProofSize;
         }
 
+        [Serializable]
         public class Metadata
         {
             public string maxValueSize;
         }
 
+        [Serializable]
         public class Mosaic
         {
             public string maxMosaicsPerAccount;
@@ -99,6 +107,7 @@ namespace Symnity.Http.Model
             public string mosaicRentalFee;
         }
 
+        [Serializable]
         public class Multisig
         {
             public string maxMultisigDepth;
@@ -106,6 +115,7 @@ namespace Symnity.Http.Model
             public string maxCosignedAccountsPerAccount;
         }
 
+        [Serializable]
         public class Namespace
         {
             public string maxNameSize;
@@ -121,21 +131,25 @@ namespace Symnity.Http.Model
             public string childNamespaceRentalFee;
         }
 
+        [Serializable]
         public class Restrictionaccount
         {
             public string maxAccountRestrictionValues;
         }
 
+        [Serializable]
         public class Restrictionmosaic
         {
             public string maxMosaicRestrictionValues;
         }
 
+        [Serializable]
         public class Transfer
         {
             public string maxMessageSize;
         }
 
+        [Serializable]
         public class Plugins
         {
             public Accountlink accountlink;
@@ -151,6 +165,7 @@ namespace Symnity.Http.Model
             public Transfer transfer;
         }
 
+        [Serializable]
         public class NetworkRoot
         {
             public Network network;
