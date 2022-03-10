@@ -18,6 +18,7 @@ namespace Symnity.Http.Model
             return multisigInfo;
         }
 
+        [Serializable]
         public class MultisigInfo
         {
             public int version;

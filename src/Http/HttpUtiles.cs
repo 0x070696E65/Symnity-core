@@ -4,6 +4,8 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using Cysharp.Threading.Tasks;
+using Symnity.Http.Model;
+using Symnity.Model.Network;
 
 namespace Symnity.Http
 {
@@ -80,6 +82,18 @@ namespace Symnity.Http
             {
                 throw new Exception("Error From GetDataFromApi" + e.Message);
             }
+        }
+
+        public static async UniTask<string> GetGenerationHash(string node)
+        {
+            var properties = await ApiNetwork.GetTheNetworkProperties(node);
+            return properties.network.generationHashSeed;
+        }
+        
+        public static async UniTask<int> GetEpochAdjustment(string node)
+        {
+            var properties = await ApiNetwork.GetTheNetworkProperties(node);
+            return int.Parse(properties.network.epochAdjustment.Replace("s", ""));
         }
     }
 }
