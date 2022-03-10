@@ -14,12 +14,12 @@ SymnityはUnityでブロックチェーンであるSymbolを利用するため�
 
 また、トランザクションをアナウンスするためにUniTaskを使用していますので以下のリンクからインストールしてください。
 <br>
-https://github.com/Cysharp/UniTask/releases　<br>
-使用方法は上記を読んでください。
+https://github.com/Cysharp/UniTask/releases
+<br>使用方法は上記を読んでください。
 <br>
 同じようにWebSocketでの接続はこちらを利用しています。(WebGL対応のため）<br>
-https://github.com/endel/NativeWebSocket　<br>
-ダウンロード＆解凍しAssetフォルダに配置してください。<br>
+https://github.com/endel/NativeWebSocket
+<br>ダウンロード＆解凍しAssetフォルダに配置してください。<br>
 
 # Usage
 
