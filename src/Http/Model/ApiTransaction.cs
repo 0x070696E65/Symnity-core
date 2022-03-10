@@ -51,6 +51,14 @@ namespace Symnity.Http.Model
                 message
             );
         }
+        
+        public static async UniTask<Datum> GetConfirmedTransaction(string node, string hash)
+        {
+            var url = "/transactions/confirmed/" + hash;
+            var transactionRootData = await HttpUtiles.GetDataFromApiString(node, url);
+            var root = JsonUtility.FromJson<Datum>(transactionRootData);
+            return root;
+        }
 
         public class TransactionQueryParameters
         {
@@ -106,7 +114,7 @@ namespace Symnity.Http.Model
             }
         }
 
-        public static async UniTask<Root> CreateTransferTransactionsFromApi(string node, TransactionQueryParameters query)
+        public static async UniTask<Root> SearchConfirmedTransactions(string node, TransactionQueryParameters query)
         {
             var param = "?";
             if (query.address != null) param += "&address=" + query.address;
@@ -125,38 +133,13 @@ namespace Symnity.Http.Model
             if (query.order != null) param += "&order=" + query.order;
 
             var url = "/transactions/confirmed" + param;
-            var transactionRootData = await HttpUtiles.GetDataFromApi(node, url);
-            var root = JsonUtility.FromJson<Root>(transactionRootData.ToString());
+            Debug.Log(url);
+            var transactionRootData = await HttpUtiles.GetDataFromApiString(node, url);
+            var root = JsonUtility.FromJson<Root>(transactionRootData);
             return root;
-            /*if (root.data.Count == 0) return null;
-
-            var transactionList = new List<TransferTransaction>();
-            root.data.ForEach(
-                transaction =>
-                {
-                    var mosaics = new List<Mosaic>();
-                    transaction.transaction.mosaics.ToList().ForEach(mosaic =>
-                    {
-                        mosaics.Add(new Mosaic(new MosaicId(mosaic.id.ToString()),
-                            long.Parse(mosaic.amount.ToString())));
-                    });
-                    var tx = new TransferTransaction(
-                        (NetworkType) Enum.ToObject(typeof(NetworkType), (byte) transaction.transaction.network),
-                        (byte) transaction.transaction.version,
-                        Deadline.CreateFromAdjustedValue(long.Parse(transaction.transaction.deadline)),
-                        long.Parse(transaction.transaction.maxFee),
-                        Address.CreateFromRawAddress(
-                            RawAddress.AddressToString(
-                                ConvertUtils.GetBytes(transaction.transaction.recipientAddress))),
-                        mosaics,
-                        new Message(MessageType.PlainMessage, ConvertUtils.HexToChar(transaction.transaction.message))
-                    );
-                    transactionList.Add(tx);
-                });
-            return transactionList;*/
         }
         
-        public static async UniTask<Root> CreateUnconfirmedTransferTransactionsFromApi(string node, TransactionQueryParameters query)
+        public static async UniTask<Root> SearchUnConfirmedTransactions(string node, TransactionQueryParameters query)
         {
             var param = "?";
             if (query.address != null) param += "&address=" + query.address;
@@ -175,9 +158,16 @@ namespace Symnity.Http.Model
             if (query.order != null) param += "&order=" + query.order;
 
             var url = "/transactions/unconfirmed" + param;
-            var transactionRootData = await HttpUtiles.GetDataFromApi(node, url);
-            var root = JsonUtility.FromJson<Root>(transactionRootData.ToString());
+            var transactionRootData = await HttpUtiles.GetDataFromApiString(node, url);
+            var root = JsonUtility.FromJson<Root>(transactionRootData);
             return root;
+        }
+
+        public static async UniTask<Datum> GetUnConfirmedTransaction(string node, string id)
+        {
+            var url = "/transactions/unconfirmed/" + id;
+            var datumString = await HttpUtiles.GetDataFromApiString(node, url);
+            return JsonUtility.FromJson<Datum>(datumString);
         }
 
         [Serializable]
@@ -205,6 +195,37 @@ namespace Symnity.Http.Model
             public string recipientAddress;
             public string message;
             public List<ApiMosaic> mosaics;
+            public List<AggTransaction> transactions;
+            public List<string> cosignatures;
+        }
+        
+        [Serializable]
+        public class AggTransaction
+        {
+            public Meta meta;
+            public AggInnerTransaction transaction;
+            public string id;
+        }
+        
+        [Serializable]
+        public class AggInnerTransaction
+        {
+            public int size;
+            public string signature;
+            public string signerPublicKey;
+            public int version;
+            public int network;
+            public int type;
+            public string maxFee;
+            public string deadline;
+            public string recipientAddress;
+            public string message;
+            public List<ApiMosaic> mosaics;
+            public string targetAddress;
+            public string scopedMetadataKey;
+            public int valueSizeDelta;
+            public int valueSize;
+            public string value;
         }
 
         [Serializable]

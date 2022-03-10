@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Numerics;
 using System.Text;
 using UnityEngine;
@@ -18,6 +19,29 @@ namespace Symnity.Core.Format
             var metadataNewLifelist = new List<byte>();
             for (var i = 0; i < length; i++) metadataNewLifelist.Add((byte)(currentMetadataValueBytes.ToArray()[i] ^ newMetadataValueBytes.ToArray()[i]));
             return metadataNewLifelist;
+        }
+        
+        public static string Hex2BinaryString(string hexvalue)
+        {
+            var binaryval = new StringBuilder();
+            for(var i=0; i < hexvalue.Length; i++)
+            {
+                string byteString = hexvalue.Substring(i, 1);
+                byte b = Convert.ToByte(byteString, 16);
+                binaryval.Append(Convert.ToString(b, 2).PadLeft(4, '0'));
+            }
+            return binaryval.ToString();
+        }
+        
+        public static byte[] Hex2Binary(string hex)
+        {
+            var chars = hex.ToCharArray();
+            var bytes = new List<byte>();
+            for(int index = 0; index < chars.Length; index += 2) {
+                var chunk = new string(chars, index, 2);
+                bytes.Add(byte.Parse(chunk, NumberStyles.AllowHexSpecifier));
+            }
+            return bytes.ToArray();
         }
         
         /**
@@ -64,7 +88,7 @@ namespace Symnity.Core.Format
                 throw new ArgumentException(e.Message);
             }
         }
-        
+
         /**
          * Converts a byte array to a hex string.
          *

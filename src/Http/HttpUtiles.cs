@@ -1,8 +1,4 @@
 using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -60,26 +56,6 @@ namespace Symnity.Http
             {
                 throw new Exception("Error From GetDataFromApi" + e.Message);
             }
-        }
-        
-
-        public static async Task Announce(string payload)
-        {
-            try
-            {
-                var json = "{ \"payload\" : \"" + payload + "\"}";
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var client = new HttpClient();
-                var accept = new MediaTypeWithQualityHeaderValue("application/json");
-                client.DefaultRequestHeaders.Accept.Add(accept);
-                var response = await client.PutAsync(ConstantValue.Node, content);
-                Console.WriteLine(response.ToString());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-            Console.WriteLine("End");
         }
     }
 }
