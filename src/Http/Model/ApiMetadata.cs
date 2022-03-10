@@ -14,77 +14,62 @@ namespace Symnity.Http.Model
     [Serializable]
     public class ApiMetadata : MonoBehaviour
     {
-        public static async UniTask<Metadata> CreateMetadataFromApi(string node, MetadataSearchCriteria searchCriteria)
+        public struct MetadataQueryParameters
         {
-            try
+            public readonly string sourceAddress;
+            public readonly string targetAddress;
+            public readonly string scopedMetadataKey;
+            public readonly string targetId;
+            public readonly int metadataType;
+            public readonly int pageSize;
+            public readonly int pageNumber;
+            public readonly string offset;
+            public readonly string order;
+            public MetadataQueryParameters(
+                string sourceAddress = "",
+                string targetAddress = "",
+                string scopedMetadataKey = "",
+                string targetId = "",
+                int metadataType = 0,
+                int pageSize = 10,
+                int pageNumber = 1,
+                string offset = null,
+                string order = null
+            )
             {
-                var param = "/metadata?sourceAddress=" + searchCriteria.SourceAddress + "&scopedMetadataKey=" +
-                            searchCriteria.ScopedMetadataKey;
-                param += searchCriteria.MetadataType == MetadataType.Account
-                    ? "&targetAddress=" + searchCriteria.Id
-                    : "&targetId=" + searchCriteria.Id;
-                var metadataRootData = await HttpUtiles.GetDataFromApi(node, param);
-                if (metadataRootData["data"] == null) throw new Exception("metaRootData is null");
-                if (metadataRootData["data"][0] == null) throw new Exception("metaDataFirst is null");
-                var metaDataFirst = metadataRootData["data"][0].ToString().Replace("\r", "").Replace("\n", "");
-                var jsonMetaData = JObject.Parse(metaDataFirst);
-                if (jsonMetaData["metadataEntry"] == null) throw new Exception("metadataEntry is null");
-                var jsonMetaDataEntry = jsonMetaData["metadataEntry"];
-                if (jsonMetaDataEntry == null) throw new Exception("metadataEntry is null");
-                if (jsonMetaDataEntry["targetId"] == null) throw new Exception("targetId is null");
-                if (jsonMetaDataEntry["version"] == null) throw new Exception("version is null");
-                if (jsonMetaDataEntry["compositeHash"] == null) throw new Exception("compositeHash is null");
-                if (jsonMetaDataEntry["sourceAddress"] == null) throw new Exception("sourceAddress is null");
-                if (jsonMetaDataEntry["targetAddress"] == null) throw new Exception("version is null");
-                if (jsonMetaDataEntry["scopedMetadataKey"] == null) throw new Exception("scopedMetadataKey is null");
-                if (jsonMetaDataEntry["metadataType"] == null) throw new Exception("metadataType is null");
-                if (jsonMetaDataEntry["value"] == null) throw new Exception("value is null");
-                if (jsonMetaData["id"] == null) throw new Exception("id is null");
-                
-                var id = searchCriteria.MetadataType == MetadataType.Account
-                    ? null
-                    : new Id(long.Parse(jsonMetaDataEntry["targetId"].ToString(),
-                        System.Globalization.NumberStyles.AllowHexSpecifier));
-
-                var metaDataEntry = new MetadataEntry(
-                    int.Parse(jsonMetaDataEntry["version"].ToString()),
-                    jsonMetaDataEntry["compositeHash"].ToString(),
-                    Address.CreateFromRawAddress(
-                        RawAddress.AddressToString(ConvertUtils.GetBytes(jsonMetaDataEntry["sourceAddress"].ToString()))),
-                    Address.CreateFromRawAddress(
-                        RawAddress.AddressToString(ConvertUtils.GetBytes(jsonMetaDataEntry["targetAddress"].ToString()))),
-                    new BigInteger(long.Parse(jsonMetaDataEntry["scopedMetadataKey"].ToString(),
-                        System.Globalization.NumberStyles.AllowHexSpecifier)),
-                    (MetadataType) Enum.ToObject(typeof(MetadataType), byte.Parse(jsonMetaDataEntry["metadataType"].ToString())),
-                    jsonMetaDataEntry["value"].ToString(),
-                    id
-                );
-
-                return new Metadata(
-                    jsonMetaData["id"].ToString(),
-                    metaDataEntry
-                );
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Error From CreateMetadataFromApi " + e.Message);
+                this.sourceAddress = sourceAddress;
+                this.targetAddress = targetAddress;
+                this.scopedMetadataKey = scopedMetadataKey;
+                this.targetId = targetId;
+                this.metadataType = metadataType;
+                this.pageSize = pageSize;
+                this.pageNumber = pageNumber;
+                this.offset = offset;
+                this.order = order;
             }
         }
         
-        public static async UniTask<MetaRoot> CreateMetadatasFromApi(string node, MetadataSearchCriteria searchCriteria)
+        public static async UniTask<MetadataRoot> SearchMetadata(string node, MetadataQueryParameters query)
         {
-            var param = "/metadata?&sourceAddress=" + searchCriteria.SourceAddress + "&pageSize=" + searchCriteria.PageSize + "&pageNumber=" + searchCriteria.PageNumber;
-                param += searchCriteria.MetadataType == MetadataType.Account
-                    ? "&targetAddress=" + searchCriteria.Id
-                    : "&targetId=" + searchCriteria.Id;
+            var param = "?";
+            if (query.sourceAddress != null) param += "&sourceAddress=" + query.sourceAddress;
+            if (query.targetAddress != null) param += "&sourceAddress=" + query.targetAddress;
+            if (query.scopedMetadataKey != null) param += "&sourceAddress=" + query.scopedMetadataKey;
+            if (query.targetId != null) param += "&sourceAddress=" + query.targetId;
+            if (query.metadataType != 0) param += "&sourceAddress=" + query.metadataType;
+            if (query.pageSize != 10) param += "&pageSize=" + query.pageSize;
+            if (query.pageNumber != 1) param += "&pageNumber=" + query.pageNumber;
+            if (query.offset != null) param += "&offset=" + query.offset;
+            if (query.order != null) param += "&order=" + query.order;
 
-                var metadataRootData = await HttpUtiles.GetDataFromApiString(node, param);
-                var re = JsonUtility.FromJson<MetaRoot>(metadataRootData); 
-                return re;
+            var url = "/metadata" + param;
+            var accountRootData = await HttpUtiles.GetDataFromApiString(node, url);
+            var root = JsonUtility.FromJson<MetadataRoot>(accountRootData);
+            return root;
         }
         
         [Serializable]
-        public class MetaMetadataEntry
+        public class MetadataEntry
         {
             public int version;
             public string compositeHash;
@@ -98,24 +83,24 @@ namespace Symnity.Http.Model
         }
 
         [Serializable]
-        public class Datum
+        public class MetadataDatum
         {
-            public MetaMetadataEntry metadataEntry;
+            public MetadataEntry metadataEntry;
             public string id;
         }
 
         [Serializable]
-        public class MetaPagination
+        public class MetadataPagination
         {
             public int pageNumber;
             public int pageSize;
         }
 
         [Serializable]
-        public class MetaRoot
+        public class MetadataRoot
         {
-            public List<Datum> data;
-            public MetaPagination pagination;
+            public List<MetadataDatum> data;
+            public MetadataPagination pagination;
         }
     }
 }

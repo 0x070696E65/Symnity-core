@@ -15,43 +15,6 @@ namespace Symnity.Http.Model
 {
     public class ApiTransaction : MonoBehaviour
     {
-        public static async UniTask<TransferTransaction> CreateTransferTransactionFromApi(string node, string hash)
-        {
-            var param = "/transactions/confirmed/" + hash;
-            Debug.Log(param);
-            var transactionRootData = await HttpUtiles.GetDataFromApi(node, param);
-            if (transactionRootData["transaction"] == null) throw new Exception("transaction is null");
-            var transactionData = transactionRootData["transaction"].ToString().Replace("\r", "").Replace("\n", "");
-            var jsonTransactionData = JObject.Parse(transactionData);
-            if (jsonTransactionData["mosaics"] == null) throw new Exception("mosaics is null");
-            if (jsonTransactionData["message"] == null) throw new Exception("message is null");
-            if (jsonTransactionData["network"] == null) throw new Exception("network is null");
-            if (jsonTransactionData["version"] == null) throw new Exception("version is null");
-            if (jsonTransactionData["deadline"] == null) throw new Exception("deadline is null");
-            if (jsonTransactionData["maxFee"] == null) throw new Exception("maxFee is null");
-            if (jsonTransactionData["recipientAddress"] == null) throw new Exception("recipientAddress is null");
-            var mosaics = new List<Mosaic>();
-
-            jsonTransactionData["mosaics"].ToList().ForEach(mosaic =>
-            {
-                mosaics.Add(new Mosaic(new MosaicId(mosaic["id"].ToString()),
-                    long.Parse(mosaic["amount"].ToString())));
-            });
-            var message = new Message(MessageType.PlainMessage,
-                ConvertUtils.HexToChar(jsonTransactionData["message"].ToString()));
-            return new TransferTransaction(
-                (NetworkType) Enum.ToObject(typeof(NetworkType), byte.Parse(jsonTransactionData["network"].ToString())),
-                byte.Parse(jsonTransactionData["version"].ToString()),
-                Deadline.CreateFromAdjustedValue(long.Parse(jsonTransactionData["deadline"].ToString())),
-                long.Parse(jsonTransactionData["maxFee"].ToString()),
-                Address.CreateFromRawAddress(
-                    RawAddress.AddressToString(
-                        ConvertUtils.GetBytes(jsonTransactionData["recipientAddress"].ToString()))),
-                mosaics,
-                message
-            );
-        }
-        
         public static async UniTask<Datum> GetConfirmedTransaction(string node, string hash)
         {
             var url = "/transactions/confirmed/" + hash;
@@ -62,21 +25,21 @@ namespace Symnity.Http.Model
 
         public class TransactionQueryParameters
         {
-            public string address;
-            public string recipientAddress;
-            public string signerPublicKey;
-            public string height;
-            public string fromHeight;
-            public string toHeight;
-            public string fromTransferAmount;
-            public string toTransferAmount;
-            public string type;
-            public string embedded;
-            public string transferMosaicId;
-            public string pageSize;
-            public string pageNumber;
-            public string offset;
-            public string order;
+            public readonly string address;
+            public readonly string recipientAddress;
+            public readonly string signerPublicKey;
+            public readonly string height;
+            public readonly string fromHeight;
+            public readonly string toHeight;
+            public readonly string fromTransferAmount;
+            public readonly string toTransferAmount;
+            public readonly List<int> type;
+            public readonly bool embedded;
+            public readonly string transferMosaicId;
+            public readonly int pageSize;
+            public readonly int pageNumber;
+            public readonly string offset;
+            public readonly string order;
 
             public TransactionQueryParameters(
                 string address = null,
@@ -87,30 +50,30 @@ namespace Symnity.Http.Model
                 string toHeight = null,
                 string fromTransferAmount = null,
                 string toTransferAmount = null,
-                string type = null,
-                string embedded = null,
+                List<int> type = null,
+                bool embedded = false,
                 string transferMosaicId = null,
-                string pageSize = null,
-                string pageNumber = null,
+                int pageSize = 10,
+                int pageNumber = 1,
                 string offset = null,
                 string order = null
             )
             {
                 this.address = address;
-                this.recipientAddress = address;
-                this.signerPublicKey = address;
-                this.height = address;
-                this.fromHeight = address;
-                this.toHeight = address;
-                this.fromTransferAmount = address;
-                this.toTransferAmount = address;
-                this.type = address;
-                this.embedded = address;
-                this.transferMosaicId = address;
-                this.pageSize = address;
-                this.pageNumber = address;
-                this.offset = address;
-                this.order = address;
+                this.recipientAddress = recipientAddress;
+                this.signerPublicKey = signerPublicKey;
+                this.height = height;
+                this.fromHeight = fromHeight;
+                this.toHeight = toHeight;
+                this.fromTransferAmount = fromTransferAmount;
+                this.toTransferAmount = toTransferAmount;
+                this.type = type;
+                this.embedded = embedded;
+                this.transferMosaicId = transferMosaicId;
+                this.pageSize = pageSize;
+                this.pageNumber = pageNumber;
+                this.offset = offset;
+                this.order = order;
             }
         }
 
@@ -122,13 +85,14 @@ namespace Symnity.Http.Model
             if (query.signerPublicKey != null) param += "&signerPublicKey=" + query.signerPublicKey;
             if (query.height != null) param += "&height=" + query.height;
             if (query.fromHeight != null) param += "&fromHeight=" + query.fromHeight;
+            if (query.toHeight != null) param += "&toHeight=" + query.toHeight;
             if (query.fromTransferAmount != null) param += "&fromTransferAmount=" + query.fromTransferAmount;
             if (query.toTransferAmount != null) param += "&toTransferAmount=" + query.toTransferAmount;
             if (query.type != null) param += "&type=" + query.type;
-            if (query.embedded != null) param += "&embedded=" + query.embedded;
+            if (query.embedded) param += "&embedded=" + query.embedded;
             if (query.transferMosaicId != null) param += "&transferMosaicId=" + query.transferMosaicId;
-            if (query.pageSize != null) param += "&pageSize=" + query.pageSize;
-            if (query.pageNumber != null) param += "&pageNumber=" + query.pageNumber;
+            if (query.pageSize != 10) param += "&pageSize=" + query.pageSize;
+            if (query.pageNumber != 1) param += "&pageNumber=" + query.pageNumber;
             if (query.offset != null) param += "&offset=" + query.offset;
             if (query.order != null) param += "&order=" + query.order;
 
