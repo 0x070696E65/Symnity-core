@@ -93,7 +93,6 @@ namespace Symnity.Http
         public static async UniTask<int> GetEpochAdjustment(string node)
         {
             var properties = await ApiNetwork.GetTheNetworkProperties(node);
-            Debug.Log(properties.network.epochAdjustment);
             return int.Parse(properties.network.epochAdjustment.Replace("s", ""));
         }
     }
